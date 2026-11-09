@@ -71,6 +71,6 @@ Resolved 2026-11-09: categories (3, no "credit not processed"), costs ($15 + $20
 thresholds ($750, 72 h), repeat disputers always escalate (HW-12 now escalates).
 
 1. (pending explanation) EV-before-missing-evidence ordering, rule 5 vs rule 6.
-3. Should escalation require a minimum EV margin? GEN-116 sends a human a case worth $1.25 in
+2. Should escalation require a minimum EV margin? GEN-116 sends a human a case worth $1.25 in
    expected value.
-4. Judge model and whether to build V4 (LangGraph). Not needed until step 2.
+3. Judge model and whether to build V4 (LangGraph). Not needed until step 2.
