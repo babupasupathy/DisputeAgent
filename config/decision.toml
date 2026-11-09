@@ -4,13 +4,13 @@
 
 [cost]
 # cost_to_fight = representment_fee + handling_cost  (USD)
-representment_fee = 15.0     # PROVISIONAL: assumed processor fee charged only if we respond
-handling_cost = 20.0         # PROVISIONAL: ~20 min of analyst time at ~$60/hr
+representment_fee = 15.0     # CONFIRMED 2026-11-09: assumed processor fee charged only if we respond
+handling_cost = 20.0         # CONFIRMED 2026-11-09: ~20 min of analyst time at ~$60/hr
 
 [escalation]
-high_value_amount = 750.0    # escalate any dispute at or above this amount
-deadline_buffer_hours = 72   # escalate when fewer hours than this remain
-repeat_disputer_min_prior = 2  # escalate when the customer has this many prior disputes (365d)
+high_value_amount = 750.0    # CONFIRMED 2026-11-09. escalate any dispute at or above this amount
+deadline_buffer_hours = 72   # CONFIRMED 2026-11-09. escalate when fewer hours than this remain
+repeat_disputer_min_prior = 2  # escalate (always, even if EV <= 0) at this many prior disputes in 365d
 escalate_on_missing_required = true
 escalate_on_conflict = true
 

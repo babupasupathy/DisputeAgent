@@ -33,29 +33,31 @@ EV     = P(win) * disputed_amount - (representment_fee + handling_cost)
 | Parameter | Value | Status |
 |---|---|---|
 | base P(win): INR / fraud / NAD | 0.70 / 0.50 / 0.45 | PROVISIONAL, to be calibrated from case history in V2 |
-| representment_fee | $15 | PROVISIONAL |
-| handling_cost | $20 (~20 min analyst time at ~$60/h) | PROVISIONAL |
-| high_value_amount | $750 (>=) | PROVISIONAL |
-| deadline_buffer_hours | 72 (<) | PROVISIONAL |
-| repeat_disputer_min_prior | 2 disputes in 365 days | PROVISIONAL |
+| representment_fee | $15 | confirmed 2026-11-09 |
+| handling_cost | $20 (~20 min analyst time at ~$60/h) | confirmed 2026-11-09 |
+| high_value_amount | $750 (>=) | confirmed 2026-11-09 |
+| deadline_buffer_hours | 72 (<) | confirmed 2026-11-09 |
+| repeat_disputer_min_prior | 2 disputes in 365 days | PROVISIONAL (count); always-escalate confirmed 2026-11-09 |
 | processor_buffer_days | 7 (merchant window = network window - 7) | assumption |
 
 **Precedence** (first match wins):
 1. Deadline passed -> **accept** (nothing can be submitted)
 2. Amount >= high-value threshold -> **escalate** (even when the merchant is at fault: a human
    should sign off on any large loss)
-3. Merchant at fault (shipment lost or returned to sender; return received but not refunded),
+3. Repeat disputer (>= 2 prior disputes in 365 days) -> **escalate**, even when EV <= 0, so a
+   human can flag the customer (owner decision 2026-11-09)
+4. Merchant at fault (shipment lost or returned to sender; return received but not refunded),
    unless already fully refunded -> **accept**
-4. EV <= 0 -> **accept** (not worth fighting, and not worth a human's time)
-5. Any trigger (deadline near, repeat disputer, conflicting evidence, missing required
-   evidence) -> **escalate**
-6. Otherwise -> **fight**
+5. EV <= 0 -> **accept** (not worth fighting, and not worth a human's time)
+6. Any remaining trigger (deadline near, conflicting evidence, missing required evidence)
+   -> **escalate**
+7. Otherwise -> **fight**
 
 When a full refund was issued before the dispute, the defense is the credit itself, so missing
 evidence and conflicts don't trigger escalation for that case.
 
 **Interpretation of the brief.** The brief says to escalate when "required evidence is missing".
-Applied literally, every weak case would escalate and nothing would ever be accepted. Rule 4
+Applied literally, every weak case would escalate and nothing would ever be accepted. Rule 5
 puts EV first: a $40 dispute with no tracking is accepted, not sent to a person. Rule 2 is the
 deliberate exception, because high-value losses always get human eyes.
 
@@ -65,10 +67,10 @@ measured as escalation precision.
 
 ## Open questions for the project owner
 
-1. Cost assumptions: $15 fee + $20 handling. Many processors charge the dispute fee whether or
-   not you respond, which would make the fee sunk and lower cost_to_fight to the handling cost.
-2. Should a repeat disputer with negative EV escalate anyway, to flag the customer for blocking?
-   Currently it is accepted (HW-12).
+Resolved 2026-11-09: categories (3, no "credit not processed"), costs ($15 + $20),
+thresholds ($750, 72 h), repeat disputers always escalate (HW-12 now escalates).
+
+1. (pending explanation) EV-before-missing-evidence ordering, rule 5 vs rule 6.
 3. Should escalation require a minimum EV margin? GEN-116 sends a human a case worth $1.25 in
    expected value.
 4. Judge model and whether to build V4 (LangGraph). Not needed until step 2.

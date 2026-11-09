@@ -167,6 +167,8 @@ def label_dispute(conn: sqlite3.Connection, dispute_id: str, category: str, as_o
         decision, why = "accept", "deadline_passed"
     elif "high_value" in triggers:
         decision, why = "escalate", "high_value"
+    elif "repeat_disputer" in triggers:  # owner decision 2026-11-09: always escalate to flag the customer
+        decision, why = "escalate", "repeat_disputer"
     elif merchant_fault and not credit_full:
         decision, why = "accept", "merchant_at_fault"
     elif ev_usd <= 0:

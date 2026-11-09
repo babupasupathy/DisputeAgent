@@ -60,9 +60,9 @@ other's customer history (enforced by a test).
 | Category | fight | accept | escalate | total |
 |---|---|---|---|---|
 | item_not_received | 18 | 13 | 25 | 56 |
-| fraud | 16 | 14 | 23 | 53 |
+| fraud | 16 | 13 | 24 | 53 |
 | not_as_described | 17 | 10 | 26 | 53 |
-| **total** | **51** | **37** | **74** | **162** |
+| **total** | **51** | **36** | **75** | **162** |
 
 Networks: Visa 64, Mastercard 55 (40 of them code 4853, which needs category inference from
 text), Amex 43. 46 disputes have an empty issuer message.
@@ -72,7 +72,7 @@ passed (1), partial refund with full-amount dispute (2), partial refund with con
 (1), full refund already issued (2), high value (3), repeat disputer (2-3), low amount (2), and
 merchant at fault (3 INR: lost / returned to sender; 2 NAD: return received, no refund).
 
-**This mix is deliberately harder than production.** 46% of eval cases should escalate. Real
+**This mix is deliberately harder than production.** 46% (75/162) of eval cases should escalate. Real
 traffic would be dominated by clean cases. Escalation *rate* on this set is not a forecast.
 Escalation *precision and recall* are what to read from it.
 
@@ -89,7 +89,7 @@ Each case holds:
 They cover: Mastercard 4853 in both categories, threshold boundaries ($749.99 vs $750.00;
 exactly 72 h vs the "<72 h" rule), deadline passed by 1 h, a CE 3.0-style "AVS failed but
 3 prior orders from the same device", full refund then lost package, high-value merchant
-fault, a conflict too small to escalate, a repeat disputer too small to fight, 50% refund
+fault, a conflict too small to escalate, a repeat disputer too small to fight (escalated anyway, by owner decision), 50% refund
 with a full-amount dispute, shipping to a non-billing address, and a return still in transit.
 
 ## Narrative text
