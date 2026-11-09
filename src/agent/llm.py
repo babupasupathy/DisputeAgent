@@ -75,8 +75,17 @@ class LLMError(RuntimeError):
     pass
 
 
+def api_key_from_env() -> str | None:
+    """ANTHROPIC_API_KEY, else DISPUTE_AGENT_ANTHROPIC_KEY (some hosted runtimes reserve the
+    standard name and do not pass it through)."""
+    return os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("DISPUTE_AGENT_ANTHROPIC_KEY")
+
+
 def make_client() -> anthropic.Anthropic:
-    return anthropic.Anthropic(max_retries=agent_config()["agent"]["max_retries"])
+    key = api_key_from_env()
+    if not key:
+        raise RuntimeError("set ANTHROPIC_API_KEY or DISPUTE_AGENT_ANTHROPIC_KEY")
+    return anthropic.Anthropic(api_key=key, max_retries=agent_config()["agent"]["max_retries"])
 
 
 def structured_call(client, *, model: str, system: str, messages: list, schema: dict, effort: str,
