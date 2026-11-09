@@ -70,7 +70,17 @@ measured as escalation precision.
 Resolved 2026-11-09: categories (3, no "credit not processed"), costs ($15 + $20),
 thresholds ($750, 72 h), repeat disputers always escalate (HW-12 now escalates).
 
-1. (pending explanation) EV-before-missing-evidence ordering, rule 5 vs rule 6.
-2. Should escalation require a minimum EV margin? GEN-116 sends a human a case worth $1.25 in
-   expected value.
-3. Judge model and whether to build V4 (LangGraph). Not needed until step 2.
+Resolved 2026-11-09: expected value comes first (rule 5 before rule 6). Fight only when
+EV > 0; a case with EV <= 0 is accepted without review even if evidence is missing. No
+minimum-EV margin on escalation: any EV > 0 case with a trigger goes to a person (GEN-116,
+EV $1.25, still escalates).
+
+**Consequence for evals.** Under this rule the costly agent error is reporting evidence as
+missing when it exists: that lowers P(win), can push EV below zero, and the case is accepted
+with no human ever seeing it. The eval suite must therefore report, separately from overall
+evidence completeness:
+- *false-missing rate*: required items present in the labels but marked missing by the agent
+- *wrongful auto-accepts*: cases the agent accepted where the label is fight or escalate, and
+  the dollar amount lost on them
+
+1. Judge model and whether to build V4 (LangGraph). Not needed until step 2.

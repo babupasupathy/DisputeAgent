@@ -126,7 +126,7 @@ label from what the agent will see.
   scan in delivered cases. The labels were unaffected, but the timeline was incoherent. Fixed,
   with a timeline test added.
 - 1 rule observation (not a bug): GEN-116 escalates with EV = $1.25. See
-  `docs/decisions.md`, open question 2.
+  `docs/decisions.md` (resolved: no margin).
 
 The brief asks for a human hand-check. Tick the boxes in `docs/handcheck_sample.md` and record
 the agreement rate here.
