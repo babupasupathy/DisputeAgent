@@ -3,3 +3,4 @@ __pycache__/
 .pytest_cache/
 data/synthetic/*.db
 .env
+evals/results/oracle/

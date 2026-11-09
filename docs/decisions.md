@@ -83,4 +83,8 @@ evidence completeness:
 - *wrongful auto-accepts*: cases the agent accepted where the label is fight or escalate, and
   the dollar amount lost on them
 
-1. Judge model and whether to build V4 (LangGraph). Not needed until step 2.
+Resolved 2026-11-09: agent model Claude Sonnet 5.5, judge model Claude Opus 5.5 (a stronger
+model than the agent, as the brief requires). Set via ANTHROPIC_MODEL and JUDGE_MODEL; never in
+code. V4 (LangGraph port) is skipped for now.
+
+No open questions.

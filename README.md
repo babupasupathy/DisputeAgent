@@ -12,8 +12,8 @@ human review. A portfolio project where the evals and product decisions are the 
 | Step | State |
 |---|---|
 | 1. Synthetic backend, data generator, rules table | done (human hand-check pending) |
-| 2. V0 baseline | not started |
-| 3-7 | not started |
+| 2. V0 baseline | built and harness-validated; **not yet run** (needs an Anthropic API key) |
+| 3-7 | not started (V4 LangGraph port skipped) |
 
 ## Quickstart
 
@@ -25,7 +25,21 @@ uvicorn src.backend.api:app --reload            # mock store + processor API
 python -m evals.labeling.handcheck_sheet --n 40 > docs/handcheck_sample.md
 ```
 
-Model name and API key will come from `ANTHROPIC_MODEL` and `ANTHROPIC_API_KEY` (from step 2 on).
+### Running an agent version
+
+```bash
+export ANTHROPIC_API_KEY=...            # never committed
+export ANTHROPIC_MODEL=claude-sonnet-5-5 # agent
+export JUDGE_MODEL=claude-opus-5-5       # draft-quality judge
+python -m evals.run --version v0 --limit 5   # smoke test first
+python -m evals.run --version v0             # all 162 cases (resumable)
+python -m evals.judge --version v0
+python -m evals.score --version v0           # writes evals/results/v0/{scores.json,report.md}
+EVAL_VERSION=v0 python -m pytest evals/test_deepeval.py -q   # same checks as DeepEval metrics
+```
+
+`python -m evals.run --version oracle` runs a label-reading "oracle" that must score 100%; it
+validates the harness without spending money.
 
 ## Layout
 

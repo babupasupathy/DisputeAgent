@@ -1,0 +1,11 @@
+# Agent and judge run settings. Model NAMES are not here: they come from the
+# environment (ANTHROPIC_MODEL for the agent, JUDGE_MODEL for the judge).
+[agent]
+effort = "medium"
+max_tokens = 16000
+max_retries = 4
+concurrency = 4
+
+[judge]
+effort = "medium"
+max_tokens = 8000
