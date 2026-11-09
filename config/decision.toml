@@ -1,0 +1,35 @@
+# Decision and escalation thresholds. These are PRODUCT DECISIONS, not code.
+# The ground-truth labeler (evals/labeling) and, later, the agent's decision
+# step both read this file. Values marked PROVISIONAL await project-owner sign-off.
+
+[cost]
+# cost_to_fight = representment_fee + handling_cost  (USD)
+representment_fee = 15.0     # PROVISIONAL: assumed processor fee charged only if we respond
+handling_cost = 20.0         # PROVISIONAL: ~20 min of analyst time at ~$60/hr
+
+[escalation]
+high_value_amount = 750.0    # escalate any dispute at or above this amount
+deadline_buffer_hours = 72   # escalate when fewer hours than this remain
+repeat_disputer_min_prior = 2  # escalate when the customer has this many prior disputes (365d)
+escalate_on_missing_required = true
+escalate_on_conflict = true
+
+[p_win]
+# Rule-based P(win) estimate. Will be calibrated from reviewed case history in V2.
+# p = base[category] * missing_penalty ** n_missing_required + strong_bonus * n_strong_present
+# then * conflict_multiplier if conflicting; full refund already issued -> credit_issued_p
+missing_penalty = 0.4
+strong_bonus = 0.07
+conflict_multiplier = 0.6
+credit_issued_p = 0.9
+min_p = 0.02
+max_p = 0.95
+
+[p_win.base]
+item_not_received = 0.70
+fraud = 0.50
+not_as_described = 0.45
+
+[processor]
+# Mock processor gives the merchant (network window - buffer) days to respond.
+processor_buffer_days = 7

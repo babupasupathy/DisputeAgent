@@ -1,0 +1,16 @@
+evidence_id,category,description,derived_from
+carrier_tracking,item_not_received,A carrier tracking number exists for the shipment,shipments.tracking_number
+delivery_confirmation,item_not_received|fraud,Carrier shows a delivered scan,tracking_events (status=delivered)
+address_match,item_not_received,Carrier delivery address matches the order shipping address,shipments.delivered_address_match
+proof_of_delivery,item_not_received,Signature or photo proof of delivery on file,shipments.signature_on_file OR shipments.photo_on_file
+customer_ack_receipt,item_not_received,Customer acknowledged receiving the package in a support message,support message text (labeled at generation)
+avs_cvv_match,fraud,Address verification and CVV both matched at authorization,orders.avs_result=Y AND orders.cvv_result=M
+delivered_to_billing_address,fraud,Order shipped to the billing address and was delivered,orders.ship_to_billing AND delivered
+prior_undisputed_orders,fraud,At least 2 prior undisputed delivered orders 120-365 days before this order,orders + disputes history
+device_ip_match,fraud,This order's device ID and IP match a prior undisputed order,orders.device_id / orders.ip_address
+established_account,fraud,Customer account is at least 180 days old at order time,customers.created_at
+product_listing,not_as_described,Archived product listing (title and description) for the purchased item is on file,order_items.listing_snapshot_id
+return_policy_accepted,not_as_described,Customer accepted the return policy at checkout,orders.policy_version_accepted
+merchant_offered_remedy,not_as_described,Merchant offered return or replacement in support communications before the dispute,support message text (labeled at generation)
+no_return_attempted,not_as_described,No return was requested or received,returns table empty for order
+dispatch_photo,not_as_described,Photo of item condition taken at dispatch,shipments.dispatch_photo_on_file

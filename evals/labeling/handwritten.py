@@ -1,0 +1,52 @@
+"""Hand-written tricky edge cases. Expected outcomes are written by hand in
+evals/cases/handwritten_expectations.json BEFORE running the labeler; the test suite
+reports any case where the rule-based labeler disagrees with the hand-written answer."""
+from src.backend.generator import Spec
+
+S = Spec  # shorthand
+
+HANDWRITTEN = [
+    S("HW-01", "item_not_received", "hw_mc4853_inr", source="handwritten", network="mastercard",
+      reason_code="4853", fixed_amount=240.00, signature=True, issuer_message=True,
+      note="MC 4853 + processor category 'general': category must be read from issuer message"),
+    S("HW-02", "not_as_described", "hw_mc4853_nad", source="handwritten", network="mastercard",
+      reason_code="4853", fixed_amount=310.00, nad_complaint=True, remedy=True, issuer_message=True,
+      note="Same code as HW-01, different category"),
+    S("HW-03", "item_not_received", "hw_no_address_data", source="handwritten", network="visa",
+      reason_code="13.1", fixed_amount=400.00, address_match=None, signature=True,
+      note="Delivered + signed, but carrier gave no address-match data -> required item missing"),
+    S("HW-04", "fraud", "hw_ce3_like_avs_fail", source="handwritten", network="visa", reason_code="10.4",
+      fixed_amount=500.00, avs_cvv=False, priors_in_window=3, device_match=True, account_age_days=700,
+      note="AVS/CVV failed but 3 prior undisputed orders from same device/IP (CE 3.0 pattern)"),
+    S("HW-05", "item_not_received", "hw_full_refund_then_lost", source="handwritten", network="amex",
+      reason_code="C08", fixed_amount=180.00, ship_status="lost", address_match=None, refund="full",
+      where_is_order=True, note="Package lost, merchant already refunded in full, cardholder still disputed"),
+    S("HW-06", "not_as_described", "hw_high_value_merchant_fault", source="handwritten", network="visa",
+      reason_code="13.3", fixed_amount=899.00, nad_complaint=True, remedy=True, return_status="received",
+      note="Return received, no refund, $899: merchant at fault but high value"),
+    S("HW-07", "item_not_received", "hw_just_under_threshold", source="handwritten", network="visa",
+      reason_code="13.1", fixed_amount=749.99, photo=True, note="$0.01 below high-value threshold"),
+    S("HW-08", "item_not_received", "hw_at_threshold", source="handwritten", network="visa",
+      reason_code="13.1", fixed_amount=750.00, photo=True, note="Exactly at high-value threshold"),
+    S("HW-09", "fraud", "hw_deadline_exactly_buffer", source="handwritten", network="amex", reason_code="F29",
+      fixed_amount=300.00, deadline="exact_hours", hours_remaining=72.0, priors_in_window=2,
+      device_match=True, note="Exactly 72h left; rule is 'fewer than 72h'"),
+    S("HW-10", "fraud", "hw_deadline_just_passed", source="handwritten", network="visa", reason_code="10.4",
+      fixed_amount=600.00, deadline="exact_hours", hours_remaining=-1.0, priors_in_window=2,
+      device_match=True, note="Strong case, deadline passed an hour ago"),
+    S("HW-11", "item_not_received", "hw_low_amount_conflict", source="handwritten", network="visa",
+      reason_code="13.1", fixed_amount=25.00, address_match=False,
+      note="Conflict, but the amount is too small to be worth a human's time"),
+    S("HW-12", "fraud", "hw_repeat_disputer_small", source="handwritten", network="mastercard",
+      reason_code="4837", fixed_amount=40.00, prior_disputes=3, avs_cvv=False, ship_to_billing=False,
+      account_age_days=20, note="Repeat disputer, weak evidence, small amount"),
+    S("HW-13", "not_as_described", "hw_half_refund_full_dispute", source="handwritten", network="amex",
+      reason_code="C32", fixed_amount=600.00, nad_complaint=True, remedy=True, refund="partial_mismatch",
+      refund_fraction=0.5, note="50% goodwill refund issued; cardholder disputes the full $600"),
+    S("HW-14", "fraud", "hw_ship_elsewhere", source="handwritten", network="visa", reason_code="10.4",
+      fixed_amount=300.00, ship_to_billing=False, priors_in_window=2, device_match=True,
+      account_age_days=600, note="AVS/CVV ok, history ok, shipped to a non-billing address"),
+    S("HW-15", "not_as_described", "hw_return_in_progress", source="handwritten", network="visa",
+      reason_code="13.3", fixed_amount=168.00, nad_complaint=True, remedy=True, return_status="requested",
+      note="Return label sent, item not yet back; not merchant fault"),
+]

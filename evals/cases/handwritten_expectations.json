@@ -1,0 +1,18 @@
+{
+  "_note": "Written by hand before running the labeler. Each entry is what a careful analyst applying docs/decisions.md would decide.",
+  "HW-01": {"category": "item_not_received", "decision": "fight", "required_missing": []},
+  "HW-02": {"category": "not_as_described", "decision": "fight", "required_missing": []},
+  "HW-03": {"category": "item_not_received", "decision": "escalate", "required_missing": ["address_match"]},
+  "HW-04": {"category": "fraud", "decision": "escalate", "required_missing": ["avs_cvv_match"], "conflicts": ["avs_cvv_failed_but_customer_history_matches"]},
+  "HW-05": {"category": "item_not_received", "decision": "fight", "credit_issued_full": true},
+  "HW-06": {"category": "not_as_described", "decision": "escalate", "decision_reason": "high_value"},
+  "HW-07": {"category": "item_not_received", "decision": "fight"},
+  "HW-08": {"category": "item_not_received", "decision": "escalate", "decision_reason": "high_value"},
+  "HW-09": {"category": "fraud", "decision": "fight"},
+  "HW-10": {"category": "fraud", "decision": "accept", "decision_reason": "deadline_passed"},
+  "HW-11": {"category": "item_not_received", "decision": "accept", "decision_reason": "negative_expected_value"},
+  "HW-12": {"category": "fraud", "decision": "accept", "decision_reason": "negative_expected_value"},
+  "HW-13": {"category": "not_as_described", "decision": "escalate", "conflicts": ["dispute_amount_exceeds_unrefunded_balance"]},
+  "HW-14": {"category": "fraud", "decision": "escalate", "required_missing": ["delivered_to_billing_address"]},
+  "HW-15": {"category": "not_as_described", "decision": "fight", "required_missing": []}
+}
