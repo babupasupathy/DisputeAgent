@@ -1,0 +1,349 @@
+<title>Dispute Agent Architecture</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; a three-lane diagram (world → agent → evals) that stacks on phones; click a box for its detail. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #17202b;
+  --muted: #5b6676;
+  --line: #d9dee6;
+  --accent: #1f5fbf;
+  --world: #8a5a1f;   --world-bg: #fbf3e8;
+  --agent: #1f5fbf;   --agent-bg: #eaf1fc;
+  --evals: #1d7a52;   --evals-bg: #e8f5ee;
+  --fight: #1d7a52; --accept: #5b6676; --escalate: #b26a00;
+  --code-bg: #eef1f5;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161d; --surface: #18202a; --ink: #e6ebf2; --muted: #9aa6b6; --line: #2b3543; --accent: #7fb0ff;
+  --world: #e2b47a; --world-bg: #2a2219; --agent: #7fb0ff; --agent-bg: #172437; --evals: #6fd3a3; --evals-bg: #14291f;
+  --fight: #6fd3a3; --accept: #9aa6b6; --escalate: #f0b45a; --code-bg: #1f2935; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11161d; --surface: #18202a; --ink: #e6ebf2; --muted: #9aa6b6; --line: #2b3543; --accent: #7fb0ff;
+  --world: #e2b47a; --world-bg: #2a2219; --agent: #7fb0ff; --agent-bg: #172437; --evals: #6fd3a3; --evals-bg: #14291f;
+  --fight: #6fd3a3; --accept: #9aa6b6; --escalate: #f0b45a; --code-bg: #1f2935; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.6rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+p { margin: 0; max-width: 68ch; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+section { display: grid; gap: 18px; min-width: 0; }
+.eyebrow { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.15rem; color: var(--muted); }
+header { display: grid; gap: 14px; }
+.status { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { font-family: var(--mono); font-size: 0.78rem; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.pill b { font-weight: 500; }
+.pill.done b { color: var(--evals); } .pill.wip b { color: var(--escalate); } .pill.todo b { color: var(--muted); }
+
+/* Diagram */
+.diagram { display: grid; grid-template-columns: 1fr 36px 1fr 36px 1fr; align-items: stretch; }
+.lane { border-radius: 10px; padding: 16px; display: grid; gap: 10px; align-content: start; min-width: 0; border: 1px solid var(--line); }
+.lane.world { background: var(--world-bg); } .lane.agent { background: var(--agent-bg); } .lane.evals { background: var(--evals-bg); }
+.lane-head { display: grid; gap: 2px; }
+.lane.world .lane-head h3 { color: var(--world); } .lane.agent .lane-head h3 { color: var(--agent); } .lane.evals .lane-head h3 { color: var(--evals); }
+.lane-head span { font-size: 0.88rem; color: var(--muted); }
+.node { all: unset; box-sizing: border-box; cursor: pointer; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 9px 11px; display: grid; gap: 1px; }
+.node:hover { border-color: var(--muted); }
+.node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.node[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.node strong { font-weight: 600; font-size: 0.97rem; }
+.node small { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); overflow-wrap: anywhere; }
+.down { text-align: center; color: var(--muted); font-size: 0.8rem; line-height: 1; }
+.gap { display: flex; align-items: center; justify-content: center; color: var(--muted); }
+.gap svg { width: 28px; height: 28px; }
+.gap svg path { fill: none; stroke: currentColor; stroke-width: 2; }
+.detail { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: grid; gap: 8px; min-height: 120px; }
+.detail .where { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+.detail ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.hint { font-size: 0.9rem; color: var(--muted); }
+
+@media (max-width: 820px) {
+  .diagram { grid-template-columns: 1fr; }
+  .gap { height: 36px; } .gap svg { transform: rotate(90deg); }
+}
+
+/* Steps */
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: s; }
+ol.steps li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); min-width: 0; }
+ol.steps li::before { content: counter(s); font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: var(--accent); }
+ol.steps li > div { display: grid; gap: 4px; min-width: 0; }
+.tag { font-family: var(--mono); font-size: 0.72rem; padding: 1px 7px; border-radius: 4px; justify-self: start; }
+.tag.world { color: var(--world); background: var(--world-bg); } .tag.agent { color: var(--agent); background: var(--agent-bg); } .tag.evals { color: var(--evals); background: var(--evals-bg); }
+
+/* Policy */
+.formula { font-family: var(--mono); font-size: 0.95rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+.rules { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.rule { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.rule .n { font-family: var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.verdict { font-family: var(--mono); font-size: 0.78rem; font-weight: 500; padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.v-fight { color: var(--fight); } .v-accept { color: var(--accept); } .v-escalate { color: var(--escalate); }
+
+/* Tables */
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; text-align: right; }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.two > div { display: grid; gap: 10px; align-content: start; min-width: 0; }
+@media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
+ul.plain { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+pre.tree { font-family: var(--mono); font-size: 0.82rem; line-height: 1.6; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 0; overflow-x: auto; }
+pre.tree .c { color: var(--muted); }
+footer { font-size: 0.88rem; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .node { transition: border-color .15s, box-shadow .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Merchant-side chargeback agent · prototype</span>
+    <h1>Dispute Agent Architecture</h1>
+    <p class="lede">What has been built so far, how the pieces connect, and how one dispute flows through them. Everything runs on synthetic data.</p>
+    <div class="status">
+      <span class="pill done"><b>Step 1 done</b> · synthetic store, rules table, labels</span>
+      <span class="pill wip"><b>Step 2 running</b> · V0 baseline + eval harness</span>
+      <span class="pill todo"><b>Steps 3–7</b> · not started</span>
+    </div>
+  </header>
+
+  <section aria-labelledby="map">
+    <span class="eyebrow">The big picture</span>
+    <h2 id="map">Three parts, one direction</h2>
+    <p>A fake merchant (the <em>synthetic world</em>) produces disputes and the records behind them. The <em>agent</em> reads those records and decides what to do. The <em>eval harness</em> knows the right answer for every case and grades the agent. Answers flow left to right only: the agent code never imports the eval code or sees the labels.</p>
+    <div class="diagram" role="group" aria-label="Architecture diagram">
+      <div class="lane world">
+        <div class="lane-head"><h3>Synthetic world</h3><span>Step 1 · fake merchant + card processor</span></div>
+        <button class="node" data-k="rules"><strong>Rules table</strong><small>data/rules/*.csv</small></button>
+        <div class="down">↓</div>
+        <button class="node" data-k="generator"><strong>Data generator</strong><small>src/backend/generator.py</small></button>
+        <div class="down">↓</div>
+        <button class="node" data-k="db"><strong>Store database</strong><small>data/synthetic/store.db</small></button>
+        <div class="down">↓</div>
+        <button class="node" data-k="repo"><strong>Repository (tool layer)</strong><small>src/backend/repository.py</small></button>
+        <button class="node" data-k="api"><strong>Mock HTTP API</strong><small>src/backend/api.py</small></button>
+      </div>
+      <div class="gap" aria-hidden="true"><svg viewBox="0 0 28 28"><path d="M3 14h20M16 7l7 7-7 7"/></svg></div>
+      <div class="lane agent">
+        <div class="lane-head"><h3>Agent (V0)</h3><span>Step 2 · one model call per dispute</span></div>
+        <button class="node" data-k="context"><strong>Gather all records</strong><small>src/agent/context.py</small></button>
+        <div class="down">↓</div>
+        <button class="node" data-k="prompt"><strong>Prompt + policy</strong><small>src/agent/prompts.py</small></button>
+        <div class="down">↓</div>
+        <button class="node" data-k="llm"><strong>Claude call</strong><small>src/agent/llm.py</small></button>
+        <div class="down">↓</div>
+        <button class="node" data-k="schema"><strong>Structured answer</strong><small>src/agent/schema.py</small></button>
+        <button class="node" data-k="config"><strong>Config</strong><small>config/*.toml</small></button>
+      </div>
+      <div class="gap" aria-hidden="true"><svg viewBox="0 0 28 28"><path d="M3 14h20M16 7l7 7-7 7"/></svg></div>
+      <div class="lane evals">
+        <div class="lane-head"><h3>Eval harness</h3><span>Step 2 · grades every version the same way</span></div>
+        <button class="node" data-k="labels"><strong>Ground-truth cases</strong><small>evals/cases/cases.jsonl</small></button>
+        <div class="down">↓</div>
+        <button class="node" data-k="run"><strong>Runner</strong><small>evals/run.py</small></button>
+        <div class="down">↓</div>
+        <button class="node" data-k="judge"><strong>Opus judge</strong><small>evals/judge.py</small></button>
+        <div class="down">↓</div>
+        <button class="node" data-k="score"><strong>Scorer + report</strong><small>evals/score.py</small></button>
+        <button class="node" data-k="oracle"><strong>Oracle (self-test)</strong><small>evals/oracle.py</small></button>
+      </div>
+    </div>
+    <div class="detail" id="detail" aria-live="polite">
+      <h3 id="d-title">Click any box above</h3>
+      <div class="where" id="d-where">Each box opens a short explanation here.</div>
+      <div id="d-body"><p class="hint">Start with <strong>Repository (tool layer)</strong>. It is the one piece every other part depends on: the agent reads records through it, and the labels are computed from the same database.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="flow">
+    <span class="eyebrow">Walkthrough</span>
+    <h2 id="flow">Follow one dispute</h2>
+    <p>Case <code>GEN-005</code> from the smoke test: a Mastercard “goods not received” dispute for $145.</p>
+    <ol class="steps">
+      <li><div><span class="tag world">synthetic world</span><h3>A dispute arrives</h3><p>The generator created an order, a shipment with tracking events, support messages and a dispute record. The webhook says reason category <code>general</code>, but the issuer's note says the item never arrived.</p></div></li>
+      <li><div><span class="tag agent">agent</span><h3>Every record is collected</h3><p><code>full_context()</code> calls all seven read functions: dispute details, deadline, order, tracking, customer history, support messages, refunds. V0 does not choose what to look at; it gets everything.</p></div></li>
+      <li><div><span class="tag agent">agent</span><h3>One prompt goes to Claude</h3><p>The system prompt holds the merchant's decision policy (built from <code>decision.toml</code>), grounding rules and the list of evidence types. The records are pasted in as JSON. The model must answer in a fixed JSON shape.</p></div></li>
+      <li><div><span class="tag agent">agent</span><h3>The model answers</h3><p>It reclassified the dispute as Mastercard 4853 <em>item not received</em>, computed EV = 0.55 × $145 − $35 = $44.75 (positive), saw that signature/photo proof and customer acknowledgement were missing, and chose <span class="verdict v-escalate">escalate</span> under rule 6. It also wrote a draft letter for a human to review.</p></div></li>
+      <li><div><span class="tag evals">eval harness</span><h3>The answer is graded</h3><p>The runner stores the answer, token counts, cost ($0.03) and latency. The scorer compares category, evidence lists and decision against the label, and checks that every ID, amount and date in the draft appears in the records. The Opus judge scores the draft letter.</p><p><strong>Verdict: wrong.</strong> The label says <span class="verdict v-fight">fight</span>. For Mastercard 4853 the required evidence is tracking, a delivery scan and an address match, and all three were present. Signature or photo proof only strengthens a case; it is not required. V0 has no rules table, so it treated an optional item as required and escalated a winnable case. 20 of the 51 “fight” cases went the same way in the full run.</p></div></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="policy">
+    <span class="eyebrow">The decision the agent must make</span>
+    <h2 id="policy">Fight, accept or escalate</h2>
+    <p>Fighting costs money, so the policy starts from expected value. The numbers are product decisions stored in <code>config/decision.toml</code>, not in code. The labeler uses the same file to compute the right answers.</p>
+    <div class="formula">expected value = P(win) × disputed amount − $35.00 &nbsp;<span style="color:var(--muted)">($15 processor fee + $20 analyst time)</span></div>
+    <p>Rules apply in order. The first one that matches decides.</p>
+    <div class="rules">
+      <div class="rule"><span class="n">1</span><span>Response deadline already passed</span><span class="verdict v-accept">accept</span></div>
+      <div class="rule"><span class="n">2</span><span>Amount is $750 or more</span><span class="verdict v-escalate">escalate</span></div>
+      <div class="rule"><span class="n">3</span><span>Customer has 2+ other disputes in the past 365 days</span><span class="verdict v-escalate">escalate</span></div>
+      <div class="rule"><span class="n">4</span><span>Records show the merchant is at fault (package lost, return never refunded)</span><span class="verdict v-accept">accept</span></div>
+      <div class="rule"><span class="n">5</span><span>Expected value is zero or negative</span><span class="verdict v-accept">accept</span></div>
+      <div class="rule"><span class="n">6</span><span>Under 72 hours left, records conflict, or required evidence missing</span><span class="verdict v-escalate">escalate</span></div>
+      <div class="rule"><span class="n">7</span><span>Anything else</span><span class="verdict v-fight">fight</span></div>
+    </div>
+    <p class="hint">Rule 5 comes before rule 6 on purpose. A wrongly “missing” evidence item can push EV below zero and get a winnable case accepted with no human looking at it. The harness counts these <em>wrongful auto-accepts</em> separately.</p>
+  </section>
+
+  <section aria-labelledby="cases">
+    <span class="eyebrow">The test set</span>
+    <h2 id="cases">162 labelled cases</h2>
+    <div class="two">
+      <div>
+        <p>147 cases come from the generator across scenarios chosen to stress the policy. 15 are hand-written edge cases, for example an amount exactly at $750 or a deadline exactly 72 hours away.</p>
+        <div class="tablebox"><table>
+          <thead><tr><th>Correct answer</th><th style="text-align:right">Cases</th></tr></thead>
+          <tbody>
+            <tr><td><span class="verdict v-escalate">escalate</span></td><td class="num">75</td></tr>
+            <tr><td><span class="verdict v-fight">fight</span></td><td class="num">51</td></tr>
+            <tr><td><span class="verdict v-accept">accept</span></td><td class="num">36</td></tr>
+          </tbody></table></div>
+      </div>
+      <div>
+        <div class="tablebox"><table>
+          <thead><tr><th>Generated scenario</th><th style="text-align:right">Cases</th></tr></thead>
+          <tbody>
+            <tr><td>Strong evidence</td><td class="num">36</td></tr>
+            <tr><td>Weak evidence</td><td class="num">36</td></tr>
+            <tr><td>Records conflict</td><td class="num">24</td></tr>
+            <tr><td>High value (≥ $750)</td><td class="num">9</td></tr>
+            <tr><td>Repeat disputer</td><td class="num">7</td></tr>
+            <tr><td>Partial refund that doesn't match</td><td class="num">6</td></tr>
+            <tr><td>Full refund already issued</td><td class="num">6</td></tr>
+            <tr><td>Deadline near</td><td class="num">6</td></tr>
+            <tr><td>Low amount</td><td class="num">6</td></tr>
+            <tr><td>Merchant at fault</td><td class="num">5</td></tr>
+            <tr><td>Partial refund that matches</td><td class="num">3</td></tr>
+            <tr><td>Deadline passed</td><td class="num">3</td></tr>
+          </tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="metrics">
+    <span class="eyebrow">How the agent is graded</span>
+    <h2 id="metrics">What the harness measures</h2>
+    <div class="tablebox"><table>
+      <thead><tr><th>Dimension</th><th>Question it answers</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Classification</td><td>Did it identify the network, reason code and category?</td><td>Exact match</td></tr>
+        <tr><td>Evidence</td><td>Did it list the right evidence as present and missing? How often did it call real evidence “missing”?</td><td>Exact match</td></tr>
+        <tr><td>Decision</td><td>Right action? How many wrongful auto-accepts, and how many dollars?</td><td>Exact match</td></tr>
+        <tr><td>Escalation</td><td>When it escalates, should it have? Does it catch the cases that need a human?</td><td>Precision / recall</td></tr>
+        <tr><td>No fabrication</td><td>Does every ID, amount, date and tracking number in the draft appear in the records?</td><td>Regex against the records</td></tr>
+        <tr><td>Draft quality</td><td>Is the letter on point, grounded, clear and well formatted?</td><td>Opus judge, 1–5 per criterion</td></tr>
+        <tr><td>Tool use</td><td>Did it look up what it needed and skip what it didn't?</td><td>Call trace (from V1 on)</td></tr>
+        <tr><td>Cost and speed</td><td>Dollars per case, p50/p95 latency, which model actually served</td><td>Logged per call</td></tr>
+      </tbody></table></div>
+    <p class="hint">The harness was checked before any real run. An oracle that reads the labels scores 100%. Deliberately breaking 10% of its answers makes exactly those 17 cases fail. The judge's grades count as uncalibrated until a person grades a sample of 40 drafts for comparison.</p>
+  </section>
+
+  <section aria-labelledby="next">
+    <span class="eyebrow">Gaps</span>
+    <h2 id="next">Not built yet</h2>
+    <div class="two">
+      <div>
+        <h3>Empty folders waiting for later steps</h3>
+        <ul class="plain">
+          <li><code>src/tools/</code> lets the agent call the repository functions as tools instead of getting everything pasted in.</li>
+          <li><code>src/review_ui/</code> is where a human approves a draft. Without approval, <code>submit_response</code> refuses to submit.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Open human tasks</h3>
+        <ul class="plain">
+          <li>Hand-check a sample of the generated cases and labels.</li>
+          <li>Grade 40 drafts to calibrate the judge.</li>
+          <li>Verify the rules table against primary Visa and Mastercard documents. Every row is marked <em>VERIFY</em>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="files">
+    <span class="eyebrow">Reference</span>
+    <h2 id="files">File map</h2>
+    <pre class="tree">config/
+  decision.toml        <span class="c"># thresholds, costs, P(win) model (product decisions)</span>
+  agent.toml           <span class="c"># effort, max tokens, retries, concurrency</span>
+  pricing.toml         <span class="c"># $ per million tokens, for cost logging</span>
+data/rules/
+  rules_table.csv      <span class="c"># 10 network reason codes → required + strong evidence</span>
+  evidence_definitions.csv
+src/
+  backend/             <span class="c"># synthetic world: schema.sql, generator, repository, api, clock</span>
+  knowledge/rules.py   <span class="c"># rules-table lookup</span>
+  agent/               <span class="c"># v0.py, context, prompts, schema, llm</span>
+  tools/  review_ui/   <span class="c"># empty: later steps</span>
+evals/
+  labeling/            <span class="c"># labeler, hand-written cases, build_cases, handcheck sheet</span>
+  cases/cases.jsonl    <span class="c"># 162 labelled cases</span>
+  metrics/             <span class="c"># deterministic, fabrication, judge</span>
+  run.py judge.py score.py oracle.py test_deepeval.py
+  results/&lt;version&gt;/   <span class="c"># outputs.jsonl, judge.jsonl, scores.json, report.md</span></pre>
+  </section>
+
+  <footer>Snapshot of branch <code>claude/relaxed-faraday-ubs0ec</code>, 9 November 2026. All data is synthetic.</footer>
+</div>
+
+<script>
+const D = {
+  rules: ["Rules table", "data/rules/rules_table.csv · evidence_definitions.csv · src/knowledge/rules.py",
+    "<p>One row per card-network reason code (Visa 13.1, 10.4, Mastercard 4853 and others). Each row lists the evidence a merchant must have and the evidence that strengthens a case, plus the response window and a source.</p><ul><li>The generator uses it to decide what evidence to create or leave out.</li><li>The labeler uses it to compute the correct answer.</li><li>V0 does <em>not</em> see it. V0 has to work out the requirements itself, which the next version (V1) will test.</li></ul>"],
+  generator: ["Data generator", "src/backend/generator.py",
+    "<p>Builds a fake merchant from a fixed random seed, so every rebuild gives identical data. Each case starts from a scenario (strong evidence, weak, conflicting records, high value, repeat disputer, deadline near, refunds…) and the generator writes matching rows: customer, order, shipment, tracking events, support messages, refunds, returns and the dispute.</p>"],
+  db: ["Store database", "data/synthetic/store.db · src/backend/schema.sql",
+    "<p>A SQLite file standing in for the merchant's systems and the card processor. Tables: customers, products, listing snapshots, orders, order items, shipments, tracking events, support messages, refunds, returns, disputes, escalations, submissions.</p><p>It is rebuilt by <code>python -m evals.labeling.build_cases</code> and is not committed.</p>"],
+  repo: ["Repository (tool layer)", "src/backend/repository.py · src/backend/clock.py",
+    "<p>The functions that read and write the store. They are what an agent's tools will call.</p><ul><li><b>Read:</b> get_dispute_details, check_deadline, get_order_details, get_shipping_tracking, get_customer_history, get_support_communications, get_refund_status.</li><li><b>Write:</b> escalate_to_human, submit_response. Submitting raises <code>ApprovalRequired</code> unless a human approved it.</li><li>Addresses, emails and IPs are masked before anything leaves this layer.</li><li>A frozen clock means “hours until deadline” is the same on every run.</li></ul>"],
+  api: ["Mock HTTP API", "src/backend/api.py",
+    "<p>A FastAPI wrapper over the same repository functions (<code>/orders/…</code>, <code>/processor/disputes/…</code>), so you can browse the fake merchant like a real service: <code>uvicorn src.backend.api:app --reload</code>.</p><p>The agent does not go through HTTP. It calls the repository in-process, which is faster and gives identical data.</p>"],
+  context: ["Gather all records", "src/agent/context.py",
+    "<p><code>full_context()</code> calls all seven read functions for the dispute and returns them as a list shaped like tool calls. V0 pastes all of it into the prompt.</p><p>Shaping it like tool calls means the fabrication check and the tool-use metrics work the same way once later versions call tools for real.</p>"],
+  prompt: ["Prompt + policy", "src/agent/prompts.py",
+    "<p>The system prompt has three parts:</p><ul><li><b>Decision policy</b>, generated from <code>decision.toml</code>: the EV formula and the seven ordered rules.</li><li><b>Grounding rules:</b> use only facts in the records, list missing evidence as missing, keep personal data masked.</li><li><b>Draft rules:</b> for fight or escalate, write the representment letter; for accept, one sentence.</li></ul>"],
+  llm: ["Claude call", "src/agent/llm.py · src/agent/v0.py",
+    "<p>One Anthropic Messages call per dispute, with the answer constrained to a JSON schema. The system prompt is cached between calls.</p><ul><li>Model from <code>ANTHROPIC_MODEL</code> (Sonnet 5.5 for the agent). It is never hard-coded.</li><li>Key from <code>ANTHROPIC_API_KEY</code>, falling back to <code>DISPUTE_AGENT_ANTHROPIC_KEY</code>.</li><li>Every call logs tokens, dollar cost, latency and the model that actually answered.</li></ul>"],
+  schema: ["Structured answer", "src/agent/schema.py",
+    "<p>Every agent version returns the same JSON shape, which is what makes versions comparable:</p><ul><li><b>classification:</b> network, reason code, category</li><li><b>evidence:</b> required items present / missing, strong items present</li><li><b>assessment:</b> P(win), expected value, conflicts, merchant fault</li><li><b>decision:</b> fight / accept / escalate, escalation reasons, rationale</li><li><b>draft:</b> letter and evidence list</li></ul>"],
+  config: ["Config", "config/decision.toml · agent.toml · pricing.toml",
+    "<ul><li><b>decision.toml:</b> $15 fee + $20 handling = $35 to fight; escalate at $750+, under 72 hours, or 2+ prior disputes; P(win) base rates by category.</li><li><b>agent.toml:</b> effort medium, 16k max output tokens, 4 retries, 4 cases in parallel.</li><li><b>pricing.toml:</b> per-model token prices for the cost numbers.</li></ul><p>The agent prompt and the labeler both read <code>decision.toml</code>, so changing a threshold changes both sides together.</p>"],
+  labels: ["Ground-truth cases", "evals/labeling/ → evals/cases/cases.jsonl",
+    "<p><code>build_cases</code> runs the generator, then a rule-based labeler works out the right answer for each dispute from the database, the rules table and <code>decision.toml</code>: category, required evidence present and missing, P(win), EV, conflicts, escalation triggers and the expected action.</p><p>15 hand-written edge cases sit alongside the 147 generated ones. A hand-check sheet lets a person spot-check the labels.</p>"],
+  run: ["Runner", "evals/run.py → evals/results/&lt;version&gt;/outputs.jsonl",
+    "<p>Runs one agent version over all cases, four at a time, and appends each result as it finishes. If interrupted, it resumes where it stopped.</p><p>Each row stores the answer, the full trace of what the agent saw, tool calls, usage and cost. Scoring then reads stored results, so re-scoring costs nothing.</p>"],
+  judge: ["Opus judge", "evals/judge.py · evals/metrics/judge.py · evals/judge_calibration.py",
+    "<p>For fight and escalate cases, a stronger model (Opus 5.5, from <code>JUDGE_MODEL</code>) grades the draft letter on four 1–5 criteria: addresses the reason code's requirements, grounded in the records, clear, correctly formatted. It also lists unsupported claims.</p><p>A draft passes if every score is 4 or higher and there are no unsupported claims. These numbers count as uncalibrated until a person grades a sample for comparison.</p>"],
+  score: ["Scorer + report", "evals/score.py · evals/metrics/deterministic.py · fabrication.py",
+    "<p>Compares each answer with its label and writes <code>scores.json</code> and a readable <code>report.md</code>: classification accuracy, evidence exact-match and false-missing rate, decision accuracy and confusion matrix, wrongful auto-accepts in count and dollars, escalation precision/recall, fabrication hits, judge pass rate, cost and latency.</p><p><code>test_deepeval.py</code> exposes the same checks as DeepEval tests.</p>"],
+  oracle: ["Oracle (self-test)", "evals/oracle.py",
+    "<p>A fake “agent” that answers by reading the labels. It must score 100%, and it does. That shows the scoring code is right before any money is spent on real runs.</p>"],
+};
+const nodes = document.querySelectorAll(".node");
+nodes.forEach(n => n.setAttribute("aria-pressed", "false"));
+function show(k) {
+  const d = D[k]; if (!d) return;
+  document.getElementById("d-title").textContent = d[0];
+  document.getElementById("d-where").innerHTML = d[1];
+  document.getElementById("d-body").innerHTML = d[2];
+  nodes.forEach(n => n.setAttribute("aria-pressed", n.dataset.k === k ? "true" : "false"));
+}
+nodes.forEach(n => n.addEventListener("click", () => show(n.dataset.k)));
+</script>

@@ -41,6 +41,21 @@ EVAL_VERSION=v0 python -m pytest evals/test_deepeval.py -q   # same checks as De
 `python -m evals.run --version oracle` runs a label-reading "oracle" that must score 100%; it
 validates the harness without spending money.
 
+## Showcase app (Streamlit)
+
+`app/` is a read-only Streamlit site for the project: overview, architecture, V0 results, a case
+explorer over all 162 disputes, the LLM-vs-code plan and the roadmap. It reads committed eval
+results only, so it needs no API key and makes no model calls.
+
+```bash
+pip install -r app/requirements.txt
+streamlit run app/streamlit_app.py
+```
+
+To host it on Streamlit Community Cloud: sign in at share.streamlit.io with GitHub, choose
+**Create app**, pick this repository and branch, and set the main file path to
+`app/streamlit_app.py`. No secrets are needed.
+
 ## Layout
 
 ```

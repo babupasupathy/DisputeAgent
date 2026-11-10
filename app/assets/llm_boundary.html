@@ -1,0 +1,224 @@
+<title>LLM Boundary Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single reading column. Two pipeline strips (today vs proposed) colored by who does the work, then a stage-by-stage table, then costs. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --ink: #17202b; --muted: #5b6676; --line: #d9dee6; --code-bg: #eef1f5;
+  --accent: #1f5fbf;
+  --llm: #b4234f;      --llm-bg: #fbe7ee;      /* large model (Sonnet / Opus) */
+  --small: #9a5a00;    --small-bg: #fdf1dc;    /* small model (Haiku), narrow task */
+  --code: #0f6e74;     --code-bg2: #e1f3f3;    /* deterministic code / lookup */
+  --human: #4a5568;    --human-bg: #eceff3;
+  --good: #1d7a52; --warn: #b26a00;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161d; --surface: #18202a; --ink: #e6ebf2; --muted: #9aa6b6; --line: #2b3543; --code-bg: #1f2935; --accent: #7fb0ff;
+  --llm: #ff8fb0; --llm-bg: #3a1a26; --small: #f2b866; --small-bg: #33261a; --code: #6fd6dc; --code-bg2: #13302f;
+  --human: #b8c2cf; --human-bg: #242d38; --good: #6fd3a3; --warn: #f0b45a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11161d; --surface: #18202a; --ink: #e6ebf2; --muted: #9aa6b6; --line: #2b3543; --code-bg: #1f2935; --accent: #7fb0ff;
+  --llm: #ff8fb0; --llm-bg: #3a1a26; --small: #f2b866; --small-bg: #33261a; --code: #6fd6dc; --code-bg2: #13302f;
+  --human: #b8c2cf; --human-bg: #242d38; --good: #6fd3a3; --warn: #f0b45a; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 1100px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.6rem; font-weight: 700; }
+h3 { font-size: 1.08rem; font-weight: 700; }
+p { margin: 0; max-width: 70ch; }
+code { font-family: var(--mono); font-size: 0.85em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+section, header { display: grid; gap: 16px; min-width: 0; }
+.eyebrow { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.15rem; color: var(--muted); }
+.hint { font-size: 0.92rem; color: var(--muted); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 0.92rem; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid; display: inline-block; }
+.sw.llm { background: var(--llm-bg); border-color: var(--llm); }
+.sw.small { background: var(--small-bg); border-color: var(--small); }
+.sw.code { background: var(--code-bg2); border-color: var(--code); }
+.sw.human { background: var(--human-bg); border-color: var(--human); }
+
+/* Pipeline strips */
+.strip-box { display: grid; gap: 8px; }
+.strip-label { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: baseline; }
+.strip-label b { font-family: var(--display); font-size: 1.1rem; }
+.strip-label span { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+.strip { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg { flex: 1 1 96px; border: 1.5px solid; border-radius: 6px; padding: 8px 10px; display: grid; gap: 2px; align-content: start; min-width: 0; }
+.seg strong { font-size: 0.92rem; font-weight: 600; line-height: 1.25; }
+.seg small { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); line-height: 1.35; }
+.seg.wide { flex: 6 1 300px; }
+.seg.llm { background: var(--llm-bg); border-color: var(--llm); } .seg.llm strong { color: var(--llm); }
+.seg.small { background: var(--small-bg); border-color: var(--small); } .seg.small strong { color: var(--small); }
+.seg.code { background: var(--code-bg2); border-color: var(--code); } .seg.code strong { color: var(--code); }
+.seg.human { background: var(--human-bg); border-color: var(--human); } .seg.human strong { color: var(--human); }
+.inner { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }
+.inner em { font-style: normal; font-family: var(--mono); font-size: 0.72rem; color: var(--llm); }
+
+/* Stage table */
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.94rem; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 500; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tr.group td { background: var(--code-bg); font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 6px 12px; }
+td.stage { font-weight: 600; min-width: 150px; }
+td.why { min-width: 280px; color: var(--ink); }
+td.why small { display: block; color: var(--muted); margin-top: 3px; }
+.chip { display: inline-block; font-family: var(--mono); font-size: 0.72rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; border: 1.5px solid; white-space: nowrap; }
+.chip.llm { color: var(--llm); background: var(--llm-bg); }
+.chip.small { color: var(--small); background: var(--small-bg); }
+.chip.code { color: var(--code); background: var(--code-bg2); }
+.chip.human { color: var(--human); background: var(--human-bg); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.arrow { color: var(--muted); padding: 0 2px; }
+
+/* Cost cards */
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 760px) { .cards { grid-template-columns: 1fr; } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.card .big { font-family: var(--display); font-size: 1.9rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.card .tag { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.card p { font-size: 0.93rem; }
+.measured { color: var(--good); } .estimate { color: var(--warn); }
+
+ol.ranked { margin: 0; padding-left: 1.4em; display: grid; gap: 14px; }
+ol.ranked li { padding-left: 4px; }
+ol.ranked li p { margin-top: 2px; }
+.callout { background: var(--surface); border: 1px solid var(--line); border-left: 0; border-radius: 8px; padding: 16px 18px; display: grid; gap: 8px; }
+.callout h3 { color: var(--warn); }
+footer { font-size: 0.88rem; color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Dispute Agent · who does each job</span>
+    <h1>LLM Boundary Map</h1>
+    <p class="lede">Today one Sonnet call does almost everything between fetching the records and the human review. Most of that work is lookups and arithmetic on database fields, which code does exactly, instantly and for free. This page shows each step, who does it now, and who should.</p>
+    <div class="legend" aria-label="Legend">
+      <span><i class="sw llm"></i>Large LLM (Sonnet / Opus)</span>
+      <span><i class="sw small"></i>Small LLM, narrow task (Haiku)</span>
+      <span><i class="sw code"></i>Deterministic code or table lookup</span>
+      <span><i class="sw human"></i>Human</span>
+    </div>
+  </header>
+
+  <section aria-labelledby="strips">
+    <span class="eyebrow">System diagram</span>
+    <h2 id="strips">One dispute, start to finish</h2>
+
+    <div class="strip-box">
+      <div class="strip-label"><b>Today (V0)</b><span>1 LLM call per case · measured $0.023 · 10.6 s typical</span></div>
+      <div class="strip">
+        <div class="seg code"><strong>Intake</strong><small>webhook</small></div>
+        <div class="seg code"><strong>Fetch records</strong><small>7 lookups</small></div>
+        <div class="seg llm wide"><strong>Sonnet does all of this in one call</strong>
+          <div class="inner"><em>classify</em><em>pick required evidence</em><em>check each item</em><em>read messages</em><em>find conflicts</em><em>guess P(win)</em><em>compute EV</em><em>apply 7 rules</em><em>write letter</em></div></div>
+        <div class="seg human"><strong>Human review</strong><small>not built</small></div>
+        <div class="seg code"><strong>Submit</strong><small>gated</small></div>
+      </div>
+    </div>
+
+    <div class="strip-box">
+      <div class="strip-label"><b>Proposed</b><span>LLM only where text has to be read or written</span></div>
+      <div class="strip">
+        <div class="seg code"><strong>Intake</strong><small>webhook</small></div>
+        <div class="seg code"><strong>Fetch records</strong><small>7 lookups</small></div>
+        <div class="seg small"><strong>Read the text</strong><small>issuer note, support messages</small></div>
+        <div class="seg code"><strong>Classify</strong><small>code + rules table</small></div>
+        <div class="seg code"><strong>Check evidence</strong><small>13 of 15 items are fields</small></div>
+        <div class="seg code"><strong>Decide</strong><small>P(win), EV, 7 rules</small></div>
+        <div class="seg llm"><strong>Write letter</strong><small>fight / escalate only</small></div>
+        <div class="seg code"><strong>Check letter</strong><small>no invented facts</small></div>
+        <div class="seg human"><strong>Human review</strong><small>approve / edit</small></div>
+        <div class="seg code"><strong>Submit</strong><small>gated</small></div>
+      </div>
+    </div>
+    <p class="hint">In the proposed flow the small model's output is a short list of yes/no facts, each with the quote it came from. Everything after that is code until the letter.</p>
+  </section>
+
+  <section aria-labelledby="stages">
+    <span class="eyebrow">Stage by stage</span>
+    <h2 id="stages">What can move off the LLM</h2>
+    <div class="tablebox"><table>
+      <thead><tr><th>Stage</th><th>Today</th><th>Proposed</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr class="group"><td colspan="4">Agent</td></tr>
+        <tr><td class="stage">Intake and fetch records</td><td><span class="chip code">code</span></td><td><span class="chip code">code</span></td>
+          <td class="why">Keep as code. V1 planned to let the model choose which lookups to call. The seven lookups are fast, free and small, so fetching all of them every time is cheaper and can't miss one.<small>Keep model-chosen tool calls as an experiment to measure, not the default.</small></td></tr>
+        <tr><td class="stage">Classify network and reason code</td><td><span class="chip llm">Sonnet</span></td><td><div class="chips"><span class="chip code">lookup</span><span class="chip small">Haiku</span></div></td>
+          <td class="why">The network and reason code arrive in the webhook; the rules table maps them to a category. A model is needed only for the ambiguous cases: Mastercard 4853 covers both “not received” and “not as described”, and some webhooks say only “general”. Then a small model reads the issuer's note.<small>V0 got 100% here, so this is about cost, not accuracy.</small></td></tr>
+        <tr><td class="stage">Which evidence is required</td><td><span class="chip llm">Sonnet (guessed)</span></td><td><span class="chip code">rules table</span></td>
+          <td class="why">This is a lookup by network and reason code. V0 had to guess it and listed the exactly right items in only 2% of cases. This was V0's biggest single failure, and it caused 20 winnable cases to be escalated.</td></tr>
+        <tr><td class="stage">Is each item present? (13 items)</td><td><span class="chip llm">Sonnet</span></td><td><span class="chip code">code</span></td>
+          <td class="why">13 of the 15 evidence types are database fields: tracking number exists, delivered scan, address match flag, signature or photo flag, AVS/CVV result, account age, prior orders, device and IP match, listing snapshot, policy accepted, returns, dispatch photo.<small>Each already has a “derived from” column in <code>evidence_definitions.csv</code>.</small></td></tr>
+        <tr><td class="stage">Is each item present? (2 items)</td><td><span class="chip llm">Sonnet</span></td><td><span class="chip small">Haiku</span></td>
+          <td class="why">“Customer acknowledged receipt” and “merchant offered a remedy” live in support message text. This is real reading, and a good narrow job for a small model: answer yes/no and quote the message.</td></tr>
+        <tr><td class="stage">Conflicts and merchant fault</td><td><span class="chip llm">Sonnet</span></td><td><div class="chips"><span class="chip code">code</span><span class="chip small">Haiku</span></div></td>
+          <td class="why">The structured checks are code: refund amount doesn't match, carrier lost or returned the parcel, return received but never refunded. The model only flags messages that contradict the tracking (“never arrived” after a signed delivery).<small>13 of the 14 wrongful auto-accepts were cases with conflicting records. This split targets them directly.</small></td></tr>
+        <tr><td class="stage">P(win)</td><td><span class="chip llm">Sonnet (guessed)</span></td><td><span class="chip code">formula</span></td>
+          <td class="why">The formula is already in <code>decision.toml</code>. Later, replace it with a simple statistical model fit on human-reviewed outcomes. Either way, no LLM.</td></tr>
+        <tr><td class="stage">Expected value and the 7 rules</td><td><span class="chip llm">Sonnet</span></td><td><span class="chip code">code</span></td>
+          <td class="why">Multiplication, comparisons and an ordered list of if-statements. Code gets it right every time and can explain exactly which rule fired. Accepted cases then need no LLM call at all.</td></tr>
+        <tr><td class="stage">Representment letter</td><td><span class="chip llm">Sonnet</span></td><td><div class="chips"><span class="chip llm">Sonnet</span><span class="chip code">template</span></div></td>
+          <td class="why">This is the real LLM job: a persuasive, point-by-point letter. Feed it only the verified fact sheet, so it can't cite anything else. Accept cases get a one-line template.<small>Output tokens are about 75% of today's cost per case. Writing letters only for fight and escalate cases cuts that directly.</small></td></tr>
+        <tr><td class="stage">Escalation summary for the reviewer</td><td><span class="chip llm">Sonnet</span></td><td><span class="chip code">template</span></td>
+          <td class="why">The reviewer needs: which rule fired, what's missing, the amount and the deadline. All of these are known facts, so a template fills them in.</td></tr>
+        <tr><td class="stage">Check letter for invented facts</td><td><span class="chip code">code</span></td><td><span class="chip code">code</span></td>
+          <td class="why">Already code. It checks every ID, amount and date against the records.</td></tr>
+        <tr><td class="stage">Review and submit</td><td><span class="chip human">human</span></td><td><span class="chip human">human</span></td>
+          <td class="why">Stays human until measured accuracy earns auto-submit for low-risk cases.</td></tr>
+        <tr class="group"><td colspan="4">Eval harness</td></tr>
+        <tr><td class="stage">Labels and scoring</td><td><span class="chip code">code</span></td><td><span class="chip code">code</span></td>
+          <td class="why">Already code.</td></tr>
+        <tr><td class="stage">Draft-quality judge</td><td><span class="chip llm">Opus</span></td><td><div class="chips"><span class="chip llm">Opus, batched</span></div></td>
+          <td class="why">The judge cost $3.93 for the V0 run, more than the agent's $3.79. Send it through the Batch API (half price), judge only letters that changed between versions, and try a Sonnet judge once the human calibration shows how well each one agrees with you.</td></tr>
+      </tbody></table></div>
+  </section>
+
+  <section aria-labelledby="cost">
+    <span class="eyebrow">What it would save</span>
+    <h2 id="cost">Cost per case</h2>
+    <div class="cards">
+      <div class="card"><span class="tag measured">Measured · V0</span><div class="big">$0.023</div>
+        <p>Average of 162 cases on Sonnet 5.5: about 5,900 input tokens (57% from cache) and 1,750 output tokens. Output is about $0.017 of the total.</p></div>
+      <div class="card"><span class="tag estimate">Estimate · proposed</span><div class="big">≈ $0.01</div>
+        <p>A Haiku reading call costs well under a tenth of a cent. A Sonnet letter for the roughly 78% of cases that are fight or escalate is about a cent. Accept cases cost almost nothing. Measure before relying on it.</p></div>
+      <div class="card"><span class="tag estimate">Estimate · speed</span><div class="big">0 s</div>
+        <p>LLM time for an accepted case, down from 10.6 s typical today. Fight and escalate cases still wait for the letter, and can be written in the background while the reviewer reads the summary.</p></div>
+    </div>
+    <p class="hint">At roughly 2 cents a case, model cost is small next to the $35 it costs to fight a dispute. The stronger reasons to move work to code are accuracy and being able to explain every decision.</p>
+  </section>
+
+  <section aria-labelledby="catch">
+    <div class="callout">
+      <h3 id="catch">A catch to plan for: the eval would grade the code against itself</h3>
+      <p>The correct answers are produced by the same rules (<code>decision.toml</code> and the rules table) that the proposed decision code would run. Moved to code, the decision layer would score 100% by construction, and that score proves nothing about real disputes.</p>
+      <p>The meaningful test moves to what the model still does: reading text. That needs labels written by a person for the text-based items (customer acknowledged receipt, remedy offered, messages that contradict tracking, which way Mastercard 4853 goes), and test messages written to be messy rather than generated from templates. Hand-labelling those is the most useful work for a PM in this design.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="order">
+    <span class="eyebrow">Suggested order</span>
+    <h2 id="order">How to roll it out and measure it</h2>
+    <ol class="ranked">
+      <li><h3>Decision layer to code</h3><p>Rules table, field checks, P(win), EV and the 7 rules. The model still reads text and writes the letter. This should remove most of V0's 20 wrongly escalated and 13 wrongly accepted cases. Compare on the same 162 cases.</p></li>
+      <li><h3>Letters only for fight and escalate</h3><p>Accepted cases get a template. Smaller bill, and the judge has fewer letters to grade.</p></li>
+      <li><h3>Haiku for reading text</h3><p>Run it next to Sonnet on the text-based items and keep it only if accuracy holds on your hand-written labels.</p></li>
+      <li><h3>Cheaper judging</h3><p>Batch API and judging only changed letters right away. Switch the judge model only after the 40-letter calibration.</p></li>
+    </ol>
+  </section>
+
+  <footer>Measured figures come from <code>evals/results/v0</code> (162 cases, 9 November 2026). Estimates use Anthropic list prices: Haiku 5.5 $0.10 / $0.50, Sonnet 5.5 $2 / $10, Opus 5.5 $4 / $20 per million input / output tokens; Batch API is half price. All data is synthetic.</footer>
+</div>
