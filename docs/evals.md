@@ -47,6 +47,20 @@ python -m evals.judge_calibration agree --version v0          # pass agreement, 
 ```
 Draft-quality numbers are reported as "uncalibrated" until this is done.
 
+## Braintrust
+
+`python -m evals.braintrust_sync upload --version <v>` pushes a version's stored results to the
+Braintrust project `DisputeAgent` as experiment `<v>`, with every deterministic score (0-1) and the
+judge's scores, so versions can be compared case by case. It uploads results only; no model calls.
+
+Judge calibration runs through Braintrust's review screen:
+```bash
+python -m evals.braintrust_sync calibration-upload --version v0   # blind set: 40 letters, no judge grades
+# a human grades human_pass and human_<criterion> (1-5) in the review screen
+python -m evals.braintrust_sync calibration-pull --version v0     # grades -> judge_calibration.csv -> agreement
+```
+The sample is the same as `evals.judge_calibration sheet` (fight/escalate letters, seed 11).
+
 ## V0 (baseline)
 
 One structured-output call. No tools, no rules table: every record the tools would return is
