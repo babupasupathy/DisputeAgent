@@ -116,7 +116,8 @@ def aggregate(cases: list[dict], results: dict[str, dict], judge: dict[str, dict
         # A letter passes when the judge passes it AND the deterministic check finds no concession.
         passed = [judge[s["case_id"]]["pass"] and not (s.get("letter") or {}).get("concession") for s in judged]
         rubrics = sorted({j.get("rubric_version") or "v1" for j in jv})
-        draft_quality = {"n_judged": len(jv),
+        status = Counter((results[s["case_id"]]["output"].get("review") or {}).get("letter_status", "drafted") for s in ok)
+        draft_quality = {"n_judged": len(jv), "letter_status": dict(status),
                          "mean_scores": {k: round(statistics.mean(j["scores"][k] for j in jv), 3) for k in keys},
                          "pass_rate": _rate(sum(passed), len(jv)),
                          "judge_pass_rate": _rate(sum(j["pass"] for j in jv), len(jv)),

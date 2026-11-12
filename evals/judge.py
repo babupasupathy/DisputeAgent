@@ -37,7 +37,8 @@ def main():
     done = {c for c, r in _latest(out).items() if not r.get("error")} if out.exists() else set()  # retry errors
     keep = set(calibration_sample(results, args.n)) if args.calibration_set else None
     todo = [r for cid, r in results.items() if r.get("output") and cid not in done
-            and r["output"]["decision"]["action"] in ("fight", "escalate") and (keep is None or cid in keep)]
+            and r["output"]["decision"]["action"] in ("fight", "escalate") and (keep is None or cid in keep)
+            and (r["output"].get("review") or {}).get("letter_status") != "brief_only"]  # no letter to grade
     lock = threading.Lock()
 
     def one(r):

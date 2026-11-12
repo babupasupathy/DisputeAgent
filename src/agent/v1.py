@@ -70,6 +70,74 @@ def _fact_sheet(dispute: dict, rule, dec, facts: dict) -> dict:
     }
 
 
+# Owner decision 2026-11-12 ("brief now, letter later"): an escalation caused only by conflicting records
+# or missing required evidence gets a reviewer brief and no letter. If the reviewer decides to contest,
+# draft_letter() writes the letter then, following the reviewer's direction. Escalations for high value,
+# a near deadline or a repeat disputer still get a full letter up front.
+BRIEF_ONLY_TRIGGERS = {"conflicting_evidence", "missing_required_evidence"}
+
+
+def brief_only(dec) -> bool:
+    return dec.action == "escalate" and set(dec.triggers) <= BRIEF_ONLY_TRIGGERS
+
+
+def _write(client, model, usage, sheet: dict, rec: dict, reviewer_direction: str | None = None) -> dict:
+    cfg = agent_config()["v1_writer"]
+    user = f"Fact sheet:\n{json.dumps(sheet, indent=1)}\n\nRecords:\n{json.dumps(rec, indent=1, sort_keys=True)}"
+    if reviewer_direction:
+        user = (f"The store's reviewer has decided to contest this dispute. Reviewer's direction: "
+                f"{reviewer_direction}\n\n" + user)
+    w, _ = structured_call(client, model=model, system=v1_writer_system(),
+                           messages=[{"role": "user", "content": user}], schema=v1_writer_schema(),
+                           effort=cfg["effort"], max_tokens=cfg["max_tokens"], usage=usage)
+    return w
+
+
+def _brief(d: dict, rec: dict, dec, facts: dict) -> dict:
+    """What the reviewer needs to decide, built in code from verified facts (no model call)."""
+    sh = rec["get_shipping_tracking"]
+    conflict_detail = {
+        "delivered_to_different_address": f"carrier delivered_address_match = {sh.get('delivered_address_match')}",
+        "merchant_acknowledged_nondelivery": "merchant's agent acknowledged non-delivery",
+        "merchant_admitted_defect": "merchant's agent admitted a defect",
+        "avs_cvv_failed_but_customer_history_matches": "AVS/CVV did not match, but the customer's history does",
+        "dispute_amount_exceeds_unrefunded_balance": f"disputed ${d['amount']:,.2f} exceeds the unrefunded balance",
+    }
+    quote_for = {"merchant_acknowledged_nondelivery": "merchant_ack_nondelivery",
+                 "merchant_admitted_defect": "merchant_admitted_defect"}
+    conflicts = []
+    for c in dec.conflicts:
+        f = facts.get(quote_for.get(c, ""), {})
+        conflicts.append(conflict_detail.get(c, c) + (f" ({f['message_id']}: \"{f['quote']}\")" if f.get("present") else ""))
+    return {
+        "why_escalated": dec.rationale,
+        "missing_required_evidence": [f"{x['evidence_id']}: {x['basis']}" for x in dec.findings
+                                      if x["evidence_id"] in dec.required_missing],
+        "conflicts": conflicts,
+        "evidence_on_file": [f"{x['evidence_id']}: {x['basis']}" for x in dec.findings if x["status"] == "present"],
+        "amount": d["amount"], "hours_remaining": dec.hours_remaining,
+        "p_win": dec.p_win, "expected_value": dec.expected_value,
+        "options": ["accept the dispute", "contest: call draft_letter() with your direction"],
+    }
+
+
+def draft_letter(client, conn, dispute: dict, model: str, reviewer_direction: str) -> dict:
+    """On-demand letter for a brief-only escalation the reviewer decided to contest."""
+    usage = Usage()
+    trace = full_context(conn, dispute)
+    rec = {t["tool"]: t["output"] for t in trace}
+    d = rec["get_dispute_details"]
+    candidates = sorted({r.category for r in rules_for(d["network"], d["reason_code"])})
+    messages = rec["get_support_communications"]["messages"]
+    read = _read(client, model, usage, d, candidates, messages)
+    facts, _ = _verify(read.get("facts") or {}, messages)
+    rule = lookup(d["network"], d["reason_code"], read["category"])
+    dec = decide(rec, rule, facts)
+    w = _write(client, model, usage, _fact_sheet(d, rule, dec, facts), rec, reviewer_direction)
+    return {"draft": {"narrative": w["narrative"], "evidence_list": w["evidence_list"]},
+            "reviewer_notes": w["reviewer_notes"], "trace": trace, "usage": usage.to_dict(), "decision": dec}
+
+
 def run_case(client, conn, dispute: dict, model: str) -> dict:
     usage = Usage()
     trace = full_context(conn, dispute)
@@ -87,17 +155,17 @@ def run_case(client, conn, dispute: dict, model: str) -> dict:
     dec = decide(rec, rule, facts)
 
     notes = list(warnings)
-    if dec.action in ("fight", "escalate"):
-        cfg = agent_config()["v1_writer"]
-        sheet = _fact_sheet(d, rule, dec, facts)
-        user = (f"Fact sheet:\n{json.dumps(sheet, indent=1)}\n\nRecords:\n"
-                f"{json.dumps(rec, indent=1, sort_keys=True)}")
-        w, _ = structured_call(client, model=model, system=v1_writer_system(),
-                               messages=[{"role": "user", "content": user}], schema=v1_writer_schema(),
-                               effort=cfg["effort"], max_tokens=cfg["max_tokens"], usage=usage)
+    letter_status, brief = "drafted", None
+    if brief_only(dec):
+        letter_status = "brief_only"
+        brief = _brief(d, rec, dec, facts)
+        draft = {"narrative": "", "evidence_list": []}
+    elif dec.action in ("fight", "escalate"):
+        w = _write(client, model, usage, _fact_sheet(d, rule, dec, facts), rec)
         draft = {"narrative": w["narrative"], "evidence_list": w["evidence_list"]}
         notes += w["reviewer_notes"]
     else:
+        letter_status = "accept_template"
         plain = {"deadline_passed": "the response deadline has passed",
                  "merchant_at_fault": "the records show the merchant at fault",
                  "negative_expected_value": "the cost of contesting exceeds the expected recovery"}[dec.rule_fired]
@@ -118,6 +186,6 @@ def run_case(client, conn, dispute: dict, model: str) -> dict:
                      "rationale": dec.rationale},
         "draft": draft,
         "review": {"rule_fired": dec.rule_fired, "reviewer_notes": notes, "text_facts": facts,
-                   "reader_skipped": bool(read.get("skipped"))},
+                   "reader_skipped": bool(read.get("skipped")), "letter_status": letter_status, "brief": brief},
     }
     return {"output": output, "trace": trace, "tool_calls": [], "usage": usage.to_dict()}
