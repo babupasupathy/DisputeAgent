@@ -114,6 +114,21 @@ Owner rulings recorded during adjudication: "prepaid return label" when the mess
 "return label attached" is **material** (adds a fact about who pays); describing a dispatch photo
 as showing "item condition" when only its existence is recorded is **minor**.
 
+### Judge rubric v3 (2026-11-12)
+
+Encodes the owner's ruling that calling a recorded dispatch photo a photo "of the item's condition"
+is minor (`judge_v3.jsonl`, $1.41). Against the 40 gold labels: agreement 0.875, kappa 0.70,
+3 failing letters passed, 2 good letters failed (v2: 0.925, 0.83, 0, 3). GEN-110 now passes as
+intended, but three letters flipped the wrong way:
+- **HW-09, GEN-029:** an account age measured at the records-pull date was rated *minor* when the
+  letter does not say "at order time" (still *material* where it does: HW-03, GEN-075/083/086).
+- **GEN-029, HW-06:** an internal "note for reviewer" inside the issuer letter was rated *minor*
+  (v2 rated it material; the owner agreed in adjudication).
+- **GEN-107:** passes under the photo ruling; the human failed it on clarity and format.
+
+Lesson: rules the rubric only implies are applied inconsistently between runs. Rules that are
+clear-cut belong in code or in the data, not in the judge's judgement.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a

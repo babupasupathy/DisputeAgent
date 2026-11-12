@@ -68,11 +68,35 @@ def agree(version: str, judge_file: str = "judge.jsonl"):
     print(out)
 
 
+def gold(version: str, judge_files: list[str]):
+    """Compare judge runs with the adjudicated gold labels (judge_gold_labels.csv)."""
+    d = RESULTS_DIR / version
+    g = {r["case_id"]: int(r["gold_pass"]) for r in csv.DictReader(open(d / "judge_gold_labels.csv")) if r["gold_pass"] != ""}
+    out = {}
+    for jf in judge_files:
+        j = {c: int(r["pass"]) for c, r in _latest(d / jf).items() if r.get("scores")}
+        pairs = [(g[c], j[c]) for c in g if c in j]
+        n = len(pairs)
+        po = sum(a == b for a, b in pairs) / n
+        pa, pb = sum(a for a, _ in pairs) / n, sum(b for _, b in pairs) / n
+        pe = pa * pb + (1 - pa) * (1 - pb)
+        out[jf] = {"n": n, "agreement": round(po, 3), "kappa": round((po - pe) / (1 - pe), 3),
+                   "missed_failures": sum(1 for a, b in pairs if a == 0 and b == 1),
+                   "false_failures": [c for c in g if c in j and g[c] == 1 and j[c] == 0]}
+    print(json.dumps(out, indent=1))
+    return out
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["sheet", "agree"])
+    ap.add_argument("cmd", choices=["sheet", "agree", "gold"])
     ap.add_argument("--version", required=True)
     ap.add_argument("--n", type=int, default=40)
-    ap.add_argument("--judge-file", default="judge.jsonl")
+    ap.add_argument("--judge-file", default="judge.jsonl", help="for gold: comma-separated list")
     a = ap.parse_args()
-    sheet(a.version, a.n) if a.cmd == "sheet" else agree(a.version, a.judge_file)
+    if a.cmd == "sheet":
+        sheet(a.version, a.n)
+    elif a.cmd == "agree":
+        agree(a.version, a.judge_file)
+    else:
+        gold(a.version, a.judge_file.split(","))

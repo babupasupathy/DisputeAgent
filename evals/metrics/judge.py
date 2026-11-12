@@ -10,8 +10,9 @@ from src.knowledge.rules import lookup
 
 # v1 failed a letter on ANY unsupported claim; calibration (docs/evals.md) showed that fails
 # letters on wording a human reviewer accepts. v2 grades each problem as material or minor and
-# fails only on material problems.
-RUBRIC_VERSION = "v2-material"
+# fails only on material problems. v3 (owner ruling during adjudication): describing a dispatch or
+# delivery photo as showing the item's condition, when the records only show the photo exists, is minor.
+RUBRIC_VERSION = "v3-material"
 
 CRITERIA = {
     "addresses_requirements": "Does the draft respond to the dispute reason and cover each evidence type the "
@@ -32,7 +33,8 @@ MATERIAL (an issuer analyst could be misled, or the merchant could be embarrasse
 - a wrong number, date, amount, ID or duration, including one computed for the wrong point in time
   (e.g. an age "at order time" that is really the age when the records were pulled)
 - implies evidence exists that the records show is missing (e.g. "signed for" when signature_on_file is false)
-- claims what the item, photo or a document shows when the records only show that it exists
+- claims what an item or a document shows when the records only show that it exists
+  (e.g. "the item matched the listing"; a photo is the exception, see MINOR)
 - exposes masked data
 
 MINOR (imprecise, but adds no new fact and would not change what an analyst concludes):
@@ -40,6 +42,8 @@ MINOR (imprecise, but adds no new fact and would not change what an analyst conc
   records the accepted policy; "filed on" for the dispute's received date)
 - naming a reason code by its standard name or category (e.g. "F29, card-not-present fraud")
 - a reasonable reading of an empty record (e.g. "no return was requested" when the returns list is empty)
+- calling a recorded dispatch or delivery photo a photo "of the item's condition" or "of the package at the
+  door" when the records only show that the photo exists (its usual purpose; the reviewer attaches the photo)
 
 When unsure, ask: if the analyst checked this sentence against the records, would they find it false or
 invented? Yes = material. Only loosely worded = minor."""
