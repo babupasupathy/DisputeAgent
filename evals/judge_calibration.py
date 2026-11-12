@@ -24,7 +24,8 @@ SEED = 11
 def calibration_sample(results: dict, n: int = 40, seed: int = SEED) -> list[str]:
     """The letters a human grades: a fixed random sample of fight/escalate drafts."""
     pool = sorted(cid for cid, r in results.items() if r.get("output")
-                  and r["output"]["decision"]["action"] in ("fight", "escalate"))
+                  and r["output"]["decision"]["action"] in ("fight", "escalate")
+                  and (r["output"].get("draft") or {}).get("narrative"))  # skip brief-only (no letter)
     return sorted(random.Random(seed).sample(pool, min(n, len(pool))))
 
 
