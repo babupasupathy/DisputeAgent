@@ -18,13 +18,21 @@ from evals.paths import CASES_DIR, RESULTS_DIR
 from evals.score import _latest
 
 
-def sheet(version: str, n: int, seed: int = 11):
+SEED = 11
+
+
+def calibration_sample(results: dict, n: int = 40, seed: int = SEED) -> list[str]:
+    """The letters a human grades: a fixed random sample of fight/escalate drafts."""
+    pool = sorted(cid for cid, r in results.items() if r.get("output")
+                  and r["output"]["decision"]["action"] in ("fight", "escalate"))
+    return sorted(random.Random(seed).sample(pool, min(n, len(pool))))
+
+
+def sheet(version: str, n: int, seed: int = SEED):
     d = RESULTS_DIR / version
     results = _latest(d / "outputs.jsonl")
     cases = {json.loads(l)["case_id"]: json.loads(l) for l in open(CASES_DIR / "cases.jsonl")}
-    pool = sorted(cid for cid, r in results.items() if r.get("output")
-                  and r["output"]["decision"]["action"] in ("fight", "escalate"))
-    pick = sorted(random.Random(seed).sample(pool, min(n, len(pool))))
+    pick = calibration_sample(results, n, seed)
     with open(d / "judge_calibration.csv", "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["case_id", "category", "issuer_message", "narrative", "evidence_list", "human_pass"]
@@ -37,9 +45,9 @@ def sheet(version: str, n: int, seed: int = 11):
           f"python -m evals.labeling.handcheck_sheet style view, or evals/results/{version}/outputs.jsonl trace.")
 
 
-def agree(version: str):
+def agree(version: str, judge_file: str = "judge.jsonl"):
     d = RESULTS_DIR / version
-    judge = _latest(d / "judge.jsonl")
+    judge = _latest(d / judge_file)
     rows = [r for r in csv.DictReader(open(d / "judge_calibration.csv")) if r["human_pass"].strip() != ""]
     pairs = [(int(r["human_pass"]), int(judge[r["case_id"]]["pass"])) for r in rows if r["case_id"] in judge]
     n = len(pairs)
@@ -54,7 +62,9 @@ def agree(version: str):
              for r in rows for k in CRITERIA if r.get(f"human_{k}", "").strip() and r["case_id"] in judge]
     out = {"n": n, "pass_agreement": round(po, 3), "cohens_kappa": round(kappa, 3),
            "mean_abs_score_diff": round(sum(diffs) / len(diffs), 3) if diffs else None}
-    (d / "judge_agreement.json").write_text(json.dumps(out, indent=1))
+    out["judge_file"] = judge_file
+    name = "judge_agreement.json" if judge_file == "judge.jsonl" else f"judge_agreement_{judge_file.removesuffix('.jsonl')}.json"
+    (d / name).write_text(json.dumps(out, indent=1))
     print(out)
 
 
@@ -63,5 +73,6 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["sheet", "agree"])
     ap.add_argument("--version", required=True)
     ap.add_argument("--n", type=int, default=40)
+    ap.add_argument("--judge-file", default="judge.jsonl")
     a = ap.parse_args()
-    sheet(a.version, a.n) if a.cmd == "sheet" else agree(a.version)
+    sheet(a.version, a.n) if a.cmd == "sheet" else agree(a.version, a.judge_file)

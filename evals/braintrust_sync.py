@@ -14,11 +14,10 @@ import argparse
 import csv
 import json
 import os
-import random
 
 import httpx
 
-from evals.judge_calibration import agree
+from evals.judge_calibration import agree, calibration_sample
 from evals.metrics.judge import CRITERIA
 from evals.paths import CASES_DIR, RESULTS_DIR
 from evals.score import _latest
@@ -126,9 +125,7 @@ def _cal_name(version: str) -> str:
 
 
 def _sample(outs: dict, n: int) -> list[str]:
-    pool = sorted(cid for cid, r in outs.items() if r.get("output")
-                  and r["output"]["decision"]["action"] in ("fight", "escalate"))
-    return sorted(random.Random(SEED).sample(pool, min(n, len(pool))))
+    return calibration_sample(outs, n, SEED)
 
 
 GRADE_CATS = [{"name": f"{i}", "value": (i - 1) / 4} for i in range(1, 6)]

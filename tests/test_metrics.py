@@ -109,10 +109,25 @@ def test_judge_parses_and_applies_pass_rule(conn, committed_cases):
     from evals.metrics.judge import CRITERIA, judge_draft
     c = _case(committed_cases, "GEN-002")
     r = oracle.run_case(conn, c)
-    good = {"criteria": {k: {"reasoning": "ok", "score": 5} for k in CRITERIA}, "unsupported_claims": []}
+    good = {"criteria": {k: {"reasoning": "ok", "score": 5} for k in CRITERIA},
+            "issues": [{"claim": "accepted at checkout", "problem": "timing not recorded", "severity": "minor"}]}
     j = judge_draft(FakeClient(good), "claude-opus-5-5", c["dispute"], "item_not_received", r["trace"], r["output"])
     assert j["pass"] and j["usage"]["cost_usd"] == pytest.approx((1000 * 4 + 500 * 20) / 1e6)
     bad = {"criteria": {k: {"reasoning": "x", "score": 5} for k in CRITERIA},
-           "unsupported_claims": ["claims a signature that is not on file"]}
-    assert not judge_draft(FakeClient(bad), "claude-opus-5-5", c["dispute"], "item_not_received",
-                           r["trace"], r["output"])["pass"]
+           "issues": [{"claim": "signed for by the cardholder", "problem": "signature_on_file is false",
+                       "severity": "material"}]}
+    jb = judge_draft(FakeClient(bad), "claude-opus-5-5", c["dispute"], "item_not_received", r["trace"], r["output"])
+    assert not jb["pass"] and len(jb["unsupported_claims"]) == 1
+    assert j["unsupported_claims"] == []  # minor issues are not counted as unsupported claims
+
+
+def test_judge_pass_rule_fails_only_on_material_issues():
+    from evals.metrics.judge import passes
+    good = {"addresses_requirements": 5, "grounded": 4, "clarity": 5, "format": 4}
+    minor = [{"claim": "accepted at checkout", "problem": "timing not recorded", "severity": "minor"}]
+    material = [{"claim": "pending internal review", "problem": "no record of any review", "severity": "material"}]
+    assert passes(good, [])
+    assert passes(good, minor)
+    assert not passes(good, material)
+    assert not passes(good, minor + material)
+    assert not passes({**good, "format": 3}, [])

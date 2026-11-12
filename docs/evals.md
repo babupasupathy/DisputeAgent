@@ -61,9 +61,37 @@ split in two:
   Claim-by-claim checking ("can I find it?") misses these; the check that catches them is "does
   anything in the records contradict it?"
 
-So neither grader alone is the reference. Next: adjudicate the 20 disagreements into a gold
-label, change the pass rule to fail only on material errors (contradiction, invented evidence,
-wrong number), re-run the judge, and measure against the adjudicated labels.
+So neither grader alone is the reference.
+
+### Judge rubric v2: fail only on material problems (2026-11-12)
+
+`evals/metrics/judge.py` (`RUBRIC_VERSION = "v2-material"`) now records every problem with a
+severity. Material: contradicts the records, invents a fact or process, a wrong number/date/ID
+(including an age computed for the wrong point in time), implies missing evidence exists, claims
+what a photo or document shows, exposes masked data. Minor: harmless wording around a recorded
+fact, a reason code's standard name, a reasonable reading of an empty record. A letter passes when
+every criterion is at least 4 and no problem is material. Re-run on the same 40 letters
+(`judge_v2.jsonl`, $1.42):
+
+| | v1 judge | v2 judge |
+|---|---|---|
+| Letters passed | 18 / 40 | 25 / 40 |
+| Agreement with human pass/fail | 0.50 | 0.625 |
+| Cohen's kappa vs human | 0.08 | 0.03 |
+
+Kappa stays near zero because the human passed 38 of 40 letters, including letters with verified
+errors, so agreement with the human labels is not a usable target on its own. Against the errors
+verified in the records, v2 behaves as intended: it still fails 8 of the 9 letters with
+contradictions, invented processes or wrong numbers (misses HW-15), and now passes letters failed
+only on wording (GEN-015, GEN-025, GEN-105, GEN-118, GEN-137). It also found real problems
+missed earlier: an internal reviewer note left in the issuer letter (HW-06) and a fifth
+account-age error (HW-09).
+
+Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
+optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
+shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a
+return label "prepaid" (GEN-109). A clean measurement needs fresh letters (V1) graded blind,
+with disagreements adjudicated.
 
 **Product finding from calibration:** `get_customer_history.account_age_days` is computed at
 lookup time, not order time (`src/backend/repository.py`), and the agent reads it as age at
