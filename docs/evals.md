@@ -91,17 +91,17 @@ account-age error (HW-09).
 
 The 15 letters where the human grade and the v2 judge disagreed were settled by the project owner
 in Braintrust (`v0-judge-adjudication`), with both views and the records shown. Combined with the
-25 letters where they already agreed, that gives gold labels for 39 letters
-(`evals/results/v0/judge_gold_labels.csv`; HW-14 left unanswered).
+25 letters where they already agreed, that gives gold labels for all 40 letters
+(`evals/results/v0/judge_gold_labels.csv`).
 
-Settled: judge right 11, original human grade right 3 (GEN-104, GEN-110, GEN-115), unanswered 1.
-Gold pass rate 72%.
+Settled: judge right 12, original human grade right 3 (GEN-104, GEN-110, GEN-115).
+Gold pass rate 70%.
 
-| Grader vs gold (n = 39) | Agreement | Kappa | Errors missed (passed a bad letter) | Good letters failed |
+| Grader vs gold (n = 40) | Agreement | Kappa | Errors missed (passed a bad letter) | Good letters failed |
 |---|---|---|---|---|
-| Human, first pass | 0.72 | 0.07 | 10 | 1 |
-| Judge v1 (any unsupported claim fails) | 0.74 | 0.50 | 0 | 10 |
-| **Judge v2 (material problems only)** | **0.92** | **0.83** | **0** | **3** |
+| Human, first pass | 0.70 | 0.06 | 11 | 1 |
+| Judge v1 (any unsupported claim fails) | 0.75 | 0.52 | 0 | 10 |
+| **Judge v2 (material problems only)** | **0.925** | **0.83** | **0** | **3** |
 
 Judge v2 clears the 0.6 kappa bar and misses no failing letter; its 3 errors are over-strict
 (two "dispatch photo of item condition" descriptions the owner ruled minor, and one letter failed
