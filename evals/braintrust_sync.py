@@ -3,6 +3,8 @@
     python -m evals.braintrust_sync upload --version v0             # experiment "<version>": all cases + scores
     python -m evals.braintrust_sync calibration-upload --version v0 # blind 40-letter review set (no judge grades)
     python -m evals.braintrust_sync calibration-pull --version v0   # human grades -> judge_calibration.csv -> agreement
+    python -m evals.braintrust_sync adjudication-upload --version v0  # human-vs-judge disagreements, both views shown
+    python -m evals.braintrust_sync adjudication-pull --version v0    # verdicts -> judge_gold_labels.csv + agreement
 
 Uploads only results already computed under evals/results; no model calls. Uses the Braintrust REST
 API at api.braintrust.dev. Auth: BRAINTRUST_API_KEY if set, otherwise none is sent (in the cloud
@@ -183,22 +185,27 @@ def _fetch_all(c, exp_id: str) -> list[dict]:
             return rows
 
 
+def _review_scores(events: list[dict], prefix: str) -> dict[str, dict]:
+    """Human review scores per case. Grading in the review screen writes the scores onto the case's
+    row AND logs a child "review" span with its own id under the same root span, so every row is
+    mapped to its case via root_span_id."""
+    case_of_root = {ev["root_span_id"]: ev["id"] for ev in events if ev.get("input")}
+    latest: dict[str, dict] = {cid: {} for cid in case_of_root.values()}
+    for ev in events:
+        cid = case_of_root.get(ev.get("root_span_id"))
+        if cid is not None:
+            latest[cid].update({k: v for k, v in (ev.get("scores") or {}).items()
+                                if k.startswith(prefix) and v is not None})
+    return latest
+
+
 def calibration_pull(version: str):
     from_val = {round((i - 1) / 4, 2): i for i in range(1, 6)}
     with _client() as c:
         p = _project(c)
         e = _experiment(c, p["id"], _cal_name(version), "", {})
         events = _fetch_all(c, e["id"])
-    # Grading in the review screen writes the scores onto the case's row AND logs a child "review"
-    # span with its own id under the same root span. Map every row to its case via root_span_id.
-    case_of_root = {ev["root_span_id"]: ev["id"] for ev in events if ev.get("input")}
-    latest: dict[str, dict] = {cid: {} for cid in case_of_root.values()}
-    for ev in events:
-        cid = case_of_root.get(ev.get("root_span_id"))
-        if cid is None:
-            continue
-        latest[cid].update({k: v for k, v in (ev.get("scores") or {}).items()
-                            if k.startswith("human_") and v is not None})
+    latest = _review_scores(events, "human_")
     out = RESULTS_DIR / version / "judge_calibration.csv"
     graded = 0
     with open(out, "w", newline="") as f:
@@ -213,12 +220,118 @@ def calibration_pull(version: str):
     agree(version)
 
 
+# ---------------- adjudication of human vs judge disagreements ----------------
+
+ADJ_SCORE = "adjudication_who_is_right"
+ADJ_CATS = [{"name": "Judge right", "value": 1.0}, {"name": "My original grade right", "value": 0.0},
+            {"name": "Unsure", "value": 0.5}]
+
+
+def _adj_name(version: str) -> str:
+    return f"{version}-judge-adjudication"
+
+
+def _human(version: str) -> dict[str, dict]:
+    rows = csv.DictReader(open(RESULTS_DIR / version / "judge_calibration.csv"))
+    return {r["case_id"]: r for r in rows if r["human_pass"] != ""}
+
+
+def adjudication_upload(version: str, judge_file: str):
+    cases, outs, _, _ = _load(version)
+    judge = _latest(RESULTS_DIR / version / judge_file)
+    human = _human(version)
+    dis = sorted(cid for cid in human if cid in judge and int(human[cid]["human_pass"]) != int(judge[cid]["pass"]))
+    pf = lambda x: "PASS" if x else "FAIL"
+    events = []
+    for cid in dis:
+        h, j, case, res = human[cid], judge[cid], cases[cid], outs[cid]
+        issues = j.get("issues") or [{"claim": c, "problem": "", "severity": "material"} for c in j.get("unsupported_claims", [])]
+        events.append({
+            "id": cid,
+            "input": {
+                "question": "The judge and your original grade disagree on this letter. Read the judge's points and "
+                            "the records, then answer: who is right?",
+                "your_original_grade": {"pass": pf(int(h["human_pass"])),
+                                        **{k: int(h[f"human_{k}"]) for k in CRITERIA if h.get(f"human_{k}")}},
+                "judge_verdict": {"pass": pf(j["pass"]), **j["scores"]},
+                "judge_material_problems": [f"{i['claim']}  ->  {i['problem']}" for i in issues if i["severity"] == "material"],
+                "judge_minor_problems": [f"{i['claim']}  ->  {i['problem']}" for i in issues if i["severity"] == "minor"],
+                "judge_reasoning": j.get("reasoning"),
+                "dispute": case["dispute"],
+                "records_the_agent_had": {t["tool"]: t["output"] for t in res["trace"]},
+            },
+            "output": {"letter": res["output"]["draft"]["narrative"], "exhibits": res["output"]["draft"]["evidence_list"]},
+            "metadata": {"order_id": case["dispute"]["order_id"], "judge_file": judge_file},
+        })
+    with _client() as c:
+        p = _project(c)
+        _post(c, "/v1/project_score", {"project_id": p["id"], "name": ADJ_SCORE, "score_type": "categorical",
+                                       "categories": ADJ_CATS,
+                                       "description": "Who is right about this letter: the judge or your original grade?"})
+        e = _experiment(c, p["id"], _adj_name(version),
+                        f"Settle the {len(events)} letters where the human grade and {judge_file} disagree.",
+                        {"version": version, "judge_file": judge_file, "n": len(events), "purpose": "adjudication"})
+        _insert(c, e["id"], events)
+    print(f"uploaded {len(events)} disagreements to experiment '{_adj_name(version)}' (id {e['id']}): {dis}")
+
+
+def _kappa(pairs: list[tuple[int, int]]) -> float:
+    n = len(pairs)
+    po = sum(a == b for a, b in pairs) / n
+    pa, pb = sum(a for a, _ in pairs) / n, sum(b for _, b in pairs) / n
+    pe = pa * pb + (1 - pa) * (1 - pb)
+    return (po - pe) / (1 - pe) if pe < 1 else 1.0
+
+
+def adjudication_pull(version: str, judge_file: str):
+    with _client() as c:
+        p = _project(c)
+        e = _experiment(c, p["id"], _adj_name(version), "", {})
+        verdicts = {cid: s.get(ADJ_SCORE) for cid, s in _review_scores(_fetch_all(c, e["id"]), "adjudication_").items()}
+    judge = _latest(RESULTS_DIR / version / judge_file)
+    human = _human(version)
+    gold, rows = {}, []
+    for cid, h in human.items():
+        hp, jp = int(h["human_pass"]), int(judge[cid]["pass"])
+        if hp == jp:
+            g, how = hp, "agreed"
+        else:
+            v = verdicts.get(cid)
+            g, how = {1.0: (jp, "judge right"), 0.0: (hp, "original grade right")}.get(v, (None, "unsure" if v == 0.5 else "not answered"))
+        rows.append([cid, hp, jp, how, "" if g is None else g])
+        if g is not None:
+            gold[cid] = g
+    out = RESULTS_DIR / version / "judge_gold_labels.csv"
+    with open(out, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["case_id", "human_pass", f"judge_pass({judge_file})", "how_settled", "gold_pass"])
+        w.writerows(sorted(rows))
+    summary = {"n_gold": len(gold), "settled": dict(sorted({r[3]: sum(1 for x in rows if x[3] == r[3]) for r in rows}.items())),
+               "gold_pass_rate": round(sum(gold.values()) / len(gold), 3) if gold else None}
+    for name, src in [("human", {c: int(h["human_pass"]) for c, h in human.items()})] + \
+                     [(f.removesuffix(".jsonl"), {c: int(r["pass"]) for c, r in _latest(RESULTS_DIR / version / f).items() if r.get("scores")})
+                      for f in ("judge.jsonl", judge_file)]:
+        pairs = [(gold[c], src[c]) for c in gold if c in src]
+        if pairs:
+            summary[f"{name}_vs_gold"] = {"n": len(pairs), "agreement": round(sum(a == b for a, b in pairs) / len(pairs), 3),
+                                          "kappa": round(_kappa(pairs), 3),
+                                          "missed_failures": sum(1 for g, x in pairs if g == 0 and x == 1),
+                                          "false_failures": sum(1 for g, x in pairs if g == 1 and x == 0)}
+    (RESULTS_DIR / version / "judge_gold_agreement.json").write_text(json.dumps(summary, indent=1))
+    print(f"wrote {out}")
+    print(json.dumps(summary, indent=1))
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["upload", "calibration-upload", "calibration-pull"])
+    ap.add_argument("cmd", choices=["upload", "calibration-upload", "calibration-pull",
+                                    "adjudication-upload", "adjudication-pull"])
+    ap.add_argument("--judge-file", default="judge_v2.jsonl")
     ap.add_argument("--version", required=True)
     ap.add_argument("--n", type=int, default=40)
     a = ap.parse_args()
     {"upload": lambda: upload(a.version),
      "calibration-upload": lambda: calibration_upload(a.version, a.n),
-     "calibration-pull": lambda: calibration_pull(a.version)}[a.cmd]()
+     "calibration-pull": lambda: calibration_pull(a.version),
+     "adjudication-upload": lambda: adjudication_upload(a.version, a.judge_file),
+     "adjudication-pull": lambda: adjudication_pull(a.version, a.judge_file)}[a.cmd]()
