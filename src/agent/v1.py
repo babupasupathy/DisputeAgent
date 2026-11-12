@@ -65,6 +65,7 @@ def _fact_sheet(dispute: dict, rule, dec, facts: dict) -> dict:
         "evidence_that_strengthens": [f for f in dec.findings if f["evidence_id"] in rule.strong_evidence],
         "customer_messages_cited": {k: v for k, v in facts.items() if v["present"]},
         "refunds_before_dispute": dec.refunded_before_dispute,
+        "full_refund_before_dispute": dec.credit_full,
         "decision": {"action": dec.action, "why": dec.rationale, "conflicts": dec.conflicts},
     }
 
@@ -97,7 +98,11 @@ def run_case(client, conn, dispute: dict, model: str) -> dict:
         draft = {"narrative": w["narrative"], "evidence_list": w["evidence_list"]}
         notes += w["reviewer_notes"]
     else:
-        draft = {"narrative": f"The merchant accepts this dispute. {dec.rationale}", "evidence_list": []}
+        plain = {"deadline_passed": "the response deadline has passed",
+                 "merchant_at_fault": "the records show the merchant at fault",
+                 "negative_expected_value": "the cost of contesting exceeds the expected recovery"}[dec.rule_fired]
+        draft = {"narrative": f"The merchant accepts this dispute and will not contest it because {plain}.",
+                 "evidence_list": []}
 
     output = {
         "classification": {"network": d["network"], "reason_code": d["reason_code"], "category": dec.category,

@@ -1,0 +1,146 @@
+{
+ "n_cases": 162,
+ "n_scored": 162,
+ "n_errors": 0,
+ "classification": {
+  "category_accuracy": 1.0,
+  "reason_code_accuracy": 1.0
+ },
+ "tool_use": {
+  "applicable": false
+ },
+ "evidence": {
+  "required_set_correct_rate": 1.0,
+  "required_exact_rate": 1.0,
+  "false_missing_rate": 0.0,
+  "false_present_rate": 0.0,
+  "strong_f1": 1.0
+ },
+ "decision": {
+  "accuracy": 1.0,
+  "by_category": {
+   "fraud": 1.0,
+   "item_not_received": 1.0,
+   "not_as_described": 1.0
+  },
+  "confusion_expected_x_predicted": {
+   "accept->accept": 36,
+   "escalate->escalate": 75,
+   "fight->fight": 51
+  },
+  "wrongful_auto_accepts": 0,
+  "wrongful_auto_accept_usd": 0.0,
+  "fought_should_escalate": 0
+ },
+ "escalation": {
+  "precision": 1.0,
+  "recall": 1.0,
+  "predicted_rate": 0.463,
+  "expected_rate": 0.463
+ },
+ "fabrication": {
+  "drafts_with_unsupported_tokens": 36,
+  "rate": 0.2222,
+  "by_type": {
+   "amounts": 35,
+   "dates": 1
+  }
+ },
+ "letter": {
+  "with_reviewer_note": 0,
+  "with_concession": 0,
+  "concession_cases": []
+ },
+ "draft_quality": {
+  "n_judged": 126,
+  "mean_scores": {
+   "addresses_requirements": 4.627,
+   "clarity": 4.802,
+   "format": 4.889,
+   "grounded": 4.27
+  },
+  "pass_rate": 0.8492,
+  "judge_pass_rate": 0.8492,
+  "drafts_with_unsupported_claims": 19,
+  "rubric_versions": [
+   "v4-material"
+  ],
+  "judge_calibrated": true,
+  "calibration": {
+   "n_letters": 40,
+   "gold": "evals/results/v0/judge_gold_labels.csv",
+   "agreement": 0.875,
+   "kappa": 0.73,
+   "note": "kappa vs adjudicated human labels; rubric fitted on the same 40 letters, so optimistic"
+  }
+ },
+ "cost_latency": {
+  "total_usd": 2.9563,
+  "mean_usd_per_case": 0.01825,
+  "latency_p50_s": 11.01,
+  "latency_p95_s": 15.38,
+  "mean_input_tokens": 2691,
+  "mean_output_tokens": 1251,
+  "served_models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ "failures": {
+  "classification": [],
+  "false_missing": [],
+  "false_present": [],
+  "decision": [],
+  "fabrication": [
+   {
+    "case_id": "GEN-013",
+    "amounts": [
+     "$35"
+    ]
+   },
+   {
+    "case_id": "GEN-014",
+    "amounts": [
+     "$35"
+    ]
+   },
+   {
+    "case_id": "GEN-020",
+    "amounts": [
+     "$35"
+    ]
+   },
+   {
+    "case_id": "GEN-021",
+    "amounts": [
+     "$35"
+    ]
+   },
+   {
+    "case_id": "GEN-022",
+    "amounts": [
+     "$35"
+    ]
+   },
+   {
+    "case_id": "GEN-024",
+    "amounts": [
+     "$35"
+    ]
+   },
+   {
+    "case_id": "GEN-035",
+    "amounts": [
+     "$35",
+     "$349.30"
+    ]
+   },
+   {
+    "case_id": "GEN-046",
+    "amounts": [
+     "$35"
+    ]
+   }
+  ],
+  "errors": []
+ }
+}

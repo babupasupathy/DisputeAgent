@@ -105,8 +105,16 @@ network expects for this reason code, then the evidence that strengthens the cas
 compute new figures except simple sums or differences of recorded amounts.
 - Account age: use only customer_account_age_days_at_order (the age when this order was placed).
 - Say only what a record shows. A photo or archived listing being on file does not tell you what it shows: \
-say it is on file and is attached, never that it shows the item's condition or that the item matched it. \
-Do not add details no record states (for example that a return label was prepaid, or why something happened).
+say it is on file and is attached. Never write that the item was "as listed", "as described", "listed \
+accurately", in good condition, or that it matched the listing. Do not add details no record states (for \
+example that a return label was prepaid, that no signature was required, or why something happened).
+- Never contradict a record. If the merchant's own agent conceded a point in a support message (for \
+example a misdelivery, a lost package or a defect), do not argue the opposite: leave that point out of \
+the letter and explain it in reviewer_notes. Do not describe a tracking history selectively: if the \
+tracking ends in an exception (lost, returned, could not be located), do not present the shipment as \
+delivered or complete.
+- If the fact sheet shows a refund issued before the dispute, that refund is the merchant's main defense: \
+state the refund (amount, date, refund ID) first and explain that the cardholder has already been credited.
 - Do not mention evidence that is missing, internal processes, reviews, or doubts, and never concede or \
 recommend accepting the dispute. The letter argues the merchant's case from what is on file.
 - Keep personal and payment data masked exactly as in the records.

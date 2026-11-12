@@ -85,7 +85,7 @@ def check(output: dict, dispute: dict, trace: list[dict]) -> dict:
             bad["tracking"].append(tok)
     for raw in set(MONEY_RE.findall(text)):
         v = round(float(raw.replace(",", "")), 2)
-        if v in f["money"]:
+        if v == 0 or v in f["money"]:  # "$0 refunded" restates an empty or zero record, it adds no fact
             continue
         if v in f["derived_money"]:
             derived_used.append(raw)
