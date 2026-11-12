@@ -69,18 +69,26 @@ def agree(version: str, judge_file: str = "judge.jsonl"):
 
 
 def gold(version: str, judge_files: list[str]):
-    """Compare judge runs with the adjudicated gold labels (judge_gold_labels.csv)."""
+    """Compare judge runs with the adjudicated gold labels (judge_gold_labels.csv). Each run is also
+    scored combined with the deterministic concession check (a letter fails if either fails)."""
+    from evals.metrics.letter_checks import check as letter_check
     d = RESULTS_DIR / version
+    outs = _latest(d / "outputs.jsonl")
+    conceded = {c for c, r in outs.items()
+                if letter_check(((r.get("output") or {}).get("draft") or {}).get("narrative", ""))["concession"]}
     g = {r["case_id"]: int(r["gold_pass"]) for r in csv.DictReader(open(d / "judge_gold_labels.csv")) if r["gold_pass"] != ""}
     out = {}
-    for jf in judge_files:
-        j = {c: int(r["pass"]) for c, r in _latest(d / jf).items() if r.get("scores")}
+    runs = [(jf, False) for jf in judge_files] + [(jf, True) for jf in judge_files]
+    for jf, with_check in runs:
+        j = {c: int(r["pass"]) and not (with_check and c in conceded)
+             for c, r in _latest(d / jf).items() if r.get("scores")}
+        j = {c: int(v) for c, v in j.items()}
         pairs = [(g[c], j[c]) for c in g if c in j]
         n = len(pairs)
         po = sum(a == b for a, b in pairs) / n
         pa, pb = sum(a for a, _ in pairs) / n, sum(b for _, b in pairs) / n
         pe = pa * pb + (1 - pa) * (1 - pb)
-        out[jf] = {"n": n, "agreement": round(po, 3), "kappa": round((po - pe) / (1 - pe), 3),
+        out[jf + (" + concession check" if with_check else "")] = {"n": n, "agreement": round(po, 3), "kappa": round((po - pe) / (1 - pe), 3),
                    "missed_failures": sum(1 for a, b in pairs if a == 0 and b == 1),
                    "false_failures": [c for c in g if c in j and g[c] == 1 and j[c] == 0]}
     print(json.dumps(out, indent=1))

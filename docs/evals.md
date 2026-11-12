@@ -129,6 +129,26 @@ intended, but three letters flipped the wrong way:
 Lesson: rules the rubric only implies are applied inconsistently between runs. Rules that are
 clear-cut belong in code or in the data, not in the judge's judgement.
 
+### Concession check and judge rubric v4 (2026-11-12)
+
+Owner ruling: a note to the internal reviewer that flags a gap is acceptable (every draft is
+reviewed); a note that concedes or undercuts the letter is material. `evals/metrics/letter_checks.py`
+detects both deterministically and `score.py` reports them: in V0, 14 of 162 letters contain a
+reviewer note and 1 a concession (HW-06, "recommend accepting this dispute ... instead of contesting").
+
+Rubric v4 states the owner's rulings outright (account age measured at any date other than the
+order date is material, however worded; gap notes minor, concessions material). Two identical v4
+runs on the 40 letters (`judge_v4.jsonl`, `judge_v4b.jsonl`, $2.79):
+- **Run-to-run stability: 0 of 40 pass/fail flips; mean per-criterion score difference 0.14.**
+- Against gold: agreement 0.825, kappa 0.61, 2 failing letters passed (GEN-107 photo ruling vs
+  the human's clarity/format fail; GEN-109 "prepaid" rated minor, against the owner's ruling),
+  5 good letters failed.
+- 3 of those 5 (GEN-034, GEN-055, GEN-092) are account ages measured at the check date that both
+  the human and v2 missed: v4 applies the ruling, the gold labels predate it. Pending owner review.
+
+Account age measured at the wrong date now appears in 9 of the 40 letters. Fixing the tool so it
+returns age at order time (V1) removes the whole class of error.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a

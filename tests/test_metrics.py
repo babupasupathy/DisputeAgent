@@ -131,3 +131,13 @@ def test_judge_pass_rule_fails_only_on_material_issues():
     assert not passes(good, material)
     assert not passes(good, minor + material)
     assert not passes({**good, "format": 3}, [])
+
+
+def test_letter_checks_flag_concessions_not_gap_notes():
+    from evals.metrics.letter_checks import check
+    gap = "Delivered on 2026-09-01. Note for reviewer: no signature is on file. We request a reversal."
+    conc = "Internal reviewer note: recommend accepting this dispute or issuing the refund instead of contesting."
+    plain = "The carrier confirmed delivery. The customer acknowledged receipt by email."
+    assert check(gap)["reviewer_note"] and not check(gap)["concession"]
+    assert check(conc)["reviewer_note"] and check(conc)["concession"]
+    assert check(plain) == {"reviewer_note": False, "concession": False, "notes": [], "concessions": []}

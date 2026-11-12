@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from evals.metrics.fabrication import check as fabrication_check
+from evals.metrics.letter_checks import check as letter_check
 
 
 def score_case(case: dict, result: dict) -> dict:
@@ -56,7 +57,8 @@ def score_case(case: dict, result: dict) -> dict:
         tool_use = {"applicable": False}
 
     fab = fabrication_check(out, d, result.get("trace") or [])
+    letter = letter_check((out.get("draft") or {}).get("narrative", ""))
     return {"case_id": case["case_id"], "category": L["category"], "scenario": case["scenario"],
             "classification": classification, "evidence": evidence, "decision": decision,
-            "escalation": escalation, "tool_use": tool_use, "fabrication": fab,
+            "escalation": escalation, "tool_use": tool_use, "fabrication": fab, "letter": letter,
             "usage": result.get("usage", {})}

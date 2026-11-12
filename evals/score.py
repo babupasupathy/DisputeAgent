@@ -93,6 +93,11 @@ def aggregate(cases: list[dict], results: dict[str, dict], judge: dict[str, dict
                   "predicted_rate": _rate(sum(e["predicted"] for e in esc), n),
                   "expected_rate": _rate(sum(c["labels"]["expected_escalation"] for c in cases), n)}
 
+    lt = [s.get("letter") or {} for s in ok]
+    letter = {"with_reviewer_note": sum(bool(x.get("reviewer_note")) for x in lt),
+              "with_concession": sum(bool(x.get("concession")) for x in lt),
+              "concession_cases": [s["case_id"] for s in ok if (s.get("letter") or {}).get("concession")]}
+
     fab = [s["fabrication"] for s in ok]
     fabrication = {"drafts_with_unsupported_tokens": sum(f["fabricated"] for f in fab),
                    "rate": _rate(sum(f["fabricated"] for f in fab), len(fab)),
@@ -134,7 +139,7 @@ def aggregate(cases: list[dict], results: dict[str, dict], judge: dict[str, dict
     }
     return {"n_cases": n, "n_scored": len(ok), "n_errors": len(errors), "classification": cls,
             "tool_use": tool_use, "evidence": evidence, "decision": decision, "escalation": escalation,
-            "fabrication": fabrication, "draft_quality": draft_quality, "cost_latency": cost,
+            "fabrication": fabrication, "letter": letter, "draft_quality": draft_quality, "cost_latency": cost,
             "failures": failures, "per_case": per}
 
 
@@ -157,6 +162,7 @@ def headline(s: dict) -> list[tuple[str, object]]:
         ("escalation recall", s["escalation"]["recall"]),
         ("escalation rate (pred / expected)", f"{s['escalation']['predicted_rate']} / {s['escalation']['expected_rate']}"),
         ("drafts with unsupported tokens", f"{s['fabrication']['drafts_with_unsupported_tokens']} ({s['fabrication']['rate']})"),
+        ("letters with a reviewer note / a concession", f"{s['letter']['with_reviewer_note']} / {s['letter']['with_concession']}"),
         ("draft quality pass rate (judge, uncalibrated)", s["draft_quality"].get("pass_rate", "not judged")),
         ("cost per case (USD)", s["cost_latency"]["mean_usd_per_case"]),
         ("total cost (USD)", s["cost_latency"]["total_usd"]),

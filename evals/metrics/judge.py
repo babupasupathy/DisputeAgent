@@ -12,7 +12,10 @@ from src.knowledge.rules import lookup
 # letters on wording a human reviewer accepts. v2 grades each problem as material or minor and
 # fails only on material problems. v3 (owner ruling during adjudication): describing a dispatch or
 # delivery photo as showing the item's condition, when the records only show the photo exists, is minor.
-RUBRIC_VERSION = "v3-material"
+# v4 (owner rulings, made explicit because v3 applied them inconsistently): an age or duration measured
+# at a date other than the order date is material whether or not the letter says "at order time"; a
+# note to the reviewer is minor if it flags a gap and material if it concedes or undercuts the letter.
+RUBRIC_VERSION = "v4-material"
 
 CRITERIA = {
     "addresses_requirements": "Does the draft respond to the dispute reason and cover each evidence type the "
@@ -30,18 +33,24 @@ SEVERITY = """Every problem you find is either MATERIAL or MINOR.
 MATERIAL (an issuer analyst could be misled, or the merchant could be embarrassed):
 - contradicts the records (e.g. "the merchant had no chance to resolve it" when the support log shows an offer)
 - invents a fact, event, document or process that no record mentions (e.g. "pending internal review")
-- a wrong number, date, amount, ID or duration, including one computed for the wrong point in time
-  (e.g. an age "at order time" that is really the age when the records were pulled)
+- a wrong number, date, amount, ID or duration, including one computed for the wrong point in time.
+  Account age is evidence about the customer AT ORDER TIME: any account age that is really the age when the
+  records were pulled (account_age_days, measured to the check date) is material, whether the letter says
+  "at order time", "N days old" or gives no date at all. Recompute from account_created_at and the order date.
 - implies evidence exists that the records show is missing (e.g. "signed for" when signature_on_file is false)
 - claims what an item or a document shows when the records only show that it exists
   (e.g. "the item matched the listing"; a photo is the exception, see MINOR)
 - exposes masked data
+- a note to the internal reviewer that concedes or undercuts the letter (e.g. "recommend accepting this
+  dispute", "should not contest"): submitted as written, it argues against the merchant
 
 MINOR (imprecise, but adds no new fact and would not change what an analyst concludes):
 - harmless wording around a recorded fact (e.g. "accepted the return policy at checkout" when the order
   records the accepted policy; "filed on" for the dispute's received date)
 - naming a reason code by its standard name or category (e.g. "F29, card-not-present fraud")
 - a reasonable reading of an empty record (e.g. "no return was requested" when the returns list is empty)
+- a note to the internal reviewer that only flags a gap or asks for a check (e.g. "Note for reviewer: no
+  signature is on file"): every draft is reviewed by a person before submission
 - calling a recorded dispatch or delivery photo a photo "of the item's condition" or "of the package at the
   door" when the records only show that the photo exists (its usual purpose; the reviewer attaches the photo)
 
