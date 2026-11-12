@@ -37,7 +37,40 @@ wrongly "missing" item can push EV below zero and the case is accepted with no h
 - Unit tests inject invented tracking numbers, dates, amounts, card digits and IDs (all caught)
   and real/derived facts (none flagged). This caught a real bug in the date regex.
 
-## Judge calibration (pending)
+## Judge calibration
+
+### V0 result (40 letters, graded blind by the project owner in Braintrust, 2026-11-12)
+
+| | Judge pass | Judge fail |
+|---|---|---|
+| Human pass | 18 | 20 |
+| Human fail | 0 | 2 |
+
+Pass agreement 0.50, Cohen's kappa 0.08, mean absolute per-criterion difference 0.56.
+Human pass rate 95%, judge 45%. **The judge is not calibrated; V0 draft-quality numbers stay
+labelled "uncalibrated".**
+
+All 20 disagreements go one way (human pass, judge fail). Checked against the records they
+split in two:
+- **Judge too strict on wording** (e.g. GEN-105, GEN-109, GEN-110, GEN-137, HW-06, HW-09):
+  "accepted the return policy *at checkout*", "dispatch photo *of item condition*", "F29,
+  card-not-present fraud". The pass rule fails a letter on any unsupported claim, however minor.
+- **Real errors the human grade missed** (HW-02, HW-03, HW-14, HW-15, GEN-075, GEN-083,
+  GEN-086, GEN-104, GEN-115): a letter that contradicts the support log, an invented "pending
+  internal review", account ages stated "at order time" that are really ages at lookup time.
+  Claim-by-claim checking ("can I find it?") misses these; the check that catches them is "does
+  anything in the records contradict it?"
+
+So neither grader alone is the reference. Next: adjudicate the 20 disagreements into a gold
+label, change the pass rule to fail only on material errors (contradiction, invented evidence,
+wrong number), re-run the judge, and measure against the adjudicated labels.
+
+**Product finding from calibration:** `get_customer_history.account_age_days` is computed at
+lookup time, not order time (`src/backend/repository.py`), and the agent reads it as age at
+order time (4 of 40 letters). The "established account" evidence is defined at order time, so
+the tool should return that value. Fix in V1.
+
+### How to run it
 
 The judge is not trusted until calibrated. After a run:
 ```bash

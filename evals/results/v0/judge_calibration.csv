@@ -1,12 +1,12 @@
 case_id,human_pass,human_addresses_requirements,human_grounded,human_clarity,human_format
 GEN-002,1,5,5,5,5
 GEN-005,1,5,5,5,5
-GEN-006,0,1,5,5,1
+GEN-006,1,5,5,5,5
 GEN-008,1,5,5,5,5
 GEN-009,1,5,5,5,5
-GEN-012,0,1,5,5,1
-GEN-015,0,,1,5,5
-GEN-025,0,1,1,5,1
+GEN-012,1,5,5,5,5
+GEN-015,1,5,5,5,5
+GEN-025,1,5,5,5,5
 GEN-029,1,5,5,5,5
 GEN-034,1,5,5,5,5
 GEN-036,1,5,5,5,5
