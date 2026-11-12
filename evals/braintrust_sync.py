@@ -192,11 +192,16 @@ def calibration_pull(version: str):
         p = _project(c)
         e = _experiment(c, p["id"], _cal_name(version), "", {})
         events = _fetch_all(c, e["id"])
-    latest: dict[str, dict] = {}
-    for ev in events:  # several rows per case id can come back (insert + human score merges)
-        cid = ev.get("id") or (ev.get("metadata") or {}).get("case_id")
-        merged = latest.setdefault(cid, {})
-        merged.update({k: v for k, v in (ev.get("scores") or {}).items() if v is not None})
+    # Grading in the review screen writes the scores onto the case's row AND logs a child "review"
+    # span with its own id under the same root span. Map every row to its case via root_span_id.
+    case_of_root = {ev["root_span_id"]: ev["id"] for ev in events if ev.get("input")}
+    latest: dict[str, dict] = {cid: {} for cid in case_of_root.values()}
+    for ev in events:
+        cid = case_of_root.get(ev.get("root_span_id"))
+        if cid is None:
+            continue
+        latest[cid].update({k: v for k, v in (ev.get("scores") or {}).items()
+                            if k.startswith("human_") and v is not None})
     out = RESULTS_DIR / version / "judge_calibration.csv"
     graded = 0
     with open(out, "w", newline="") as f:
