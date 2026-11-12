@@ -1,6 +1,6 @@
 {
  "n": 30,
- "pass_agreement": 0.433,
- "cohens_kappa": 0.045,
+ "pass_agreement": 0.467,
+ "cohens_kappa": 0.091,
  "mean_abs_score_diff": 0.6
 }
