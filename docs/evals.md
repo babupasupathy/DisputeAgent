@@ -205,6 +205,45 @@ the letter (HW-06, HW-12). The deterministic concession check caught neither of 
 concessions ("not recommended", "does not support the merchant"): its phrase list is narrow, so
 the judge remains the main defence there.
 
+### V1: decisions in code, model reads and writes; brief now, letter later (2026-11-12)
+
+Design in docs/decisions.md. Three runs, all on the same 162 cases, letters graded with the frozen judge:
+- run 1 (`v1-run1`): decisions 162/162; letters 84.9%. Fixed: refund-before-dispute letters ignored the
+  refund, letters argued against the merchant's own messages, "listed accurately" claims, accept template
+  leaking internal figures, fact checker flagging "$0".
+- run 2 (`v1-run2`): fight letters 51/51, escalation letters 60/75; failures were escalations with conflicts or
+  missing evidence. Owner decision: brief now, letter later.
+- run 3 (`v1`, final):
+
+| | V0 | v0-agefix | **V1** |
+|---|---|---|---|
+| Decision accuracy | 75.9% | 76.5% | **100%** |
+| Wrongful auto-accepts | 14 ($5,377) | 13 ($4,828) | **0** |
+| Winnable cases escalated | 20 | 20 | **0** |
+| Required evidence exactly right | 1.9% | 1.9% | **100%** |
+| Letters proposed up front, passing | 61.7% (115) | 91.5% (117) | **97.4% (76)** |
+| Letters flagged by the fact checker | 7 | 7 | **0** |
+| Cost per case | $0.0234 | $0.0237 | **$0.0113** |
+| Latency p50 / p95 | 10.6 / 16.9 s | 10.9 / 17.4 s | **2.5 / 11.5 s** |
+
+All three Roadmap predictions held: winnable cases escalated 20 -> 0 (target < 5), wrongful auto-accepts
+14 -> 0 (target < 3), cost per case -52% (target "roughly halves").
+
+Letter status in V1: 76 drafted up front (51 fight, 25 high-value / deadline / repeat-disputer escalations),
+50 brief-only escalations, 36 accepts (template, no model call). The model is not called at all for 16 cases.
+
+On-demand letters (`v1-ondemand`, simulated reviewer contesting every brief-only case with a generic
+direction): 38/50 pass (76%). The failures are cases where the merchant's own agent admitted a misdelivery
+or defect, AVS failed, or the carrier did not confirm the address. No honest contest letter exists for most
+of them; a real reviewer reading the brief would usually accept. So 76% is a stress test, not the expected
+production rate, and it argues for a guardrail: warn the reviewer before drafting when the brief shows a
+merchant admission.
+
+Caveats: decision accuracy is 100% partly by construction (the decision code implements the same written
+policy as the answer key; given the true facts it matches on all 162 cases), so it measures the reading
+step, which was right on every case. Letter fixes were developed on these 162 cases. Next measurement:
+fresh letters graded blind.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a
