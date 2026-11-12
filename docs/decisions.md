@@ -65,6 +65,36 @@ deliberate exception, because high-value losses always get human eyes.
 agent, not to the case. It will be an agent-side trigger in step 4, and its effect will be
 measured as escalation precision.
 
+## V1 redefined: decisions in code, the model reads and writes (owner decision 2026-11-12)
+
+The brief's V1 was "agent with tools and rules table": the model chooses which lookups to call and
+still makes the decision. V0's evals argue against both halves:
+- Decision errors came from the model applying the policy, not from missing data: 20 winnable
+  cases escalated because it treated optional evidence as required (required-evidence lists exactly
+  right in 2% of cases), and 13 conflicting cases accepted without review.
+- 13 of the 15 evidence types are database fields, and P(win), expected value and the 7 rules are
+  arithmetic and if-statements. Code does them exactly, for free, and can name the rule that fired.
+- Fetching all seven records costs nothing and cannot miss one; letting the model choose adds cost
+  and a new way to fail.
+
+So V1 = records fetched in code; rules table, evidence checks, P(win), EV and the decision rules in
+code (`src/agent/decide.py`, implementing this document's policy from `config/decision.toml`); the
+model does only what needs language: (1) read the issuer note and support messages for the
+category of ambiguous codes and four text facts (customer acknowledged receipt, merchant offered a
+remedy, merchant acknowledged non-delivery, merchant admitted a defect), each backed by a quoted
+message that code verifies; (2) write the letter, for fight and escalate only, from a verified fact
+sheet, with notes for the reviewer kept out of the issuer letter. Same model (Sonnet 5.5) as V0, so
+the change is the architecture, not the model; Haiku for reading is a later, separate experiment.
+
+The brief's "model chooses the tools" stays an optional experiment, reported against V1 under the
+brief's rule that complexity without measured gain is reported as such. V2 (calibration from
+reviewed outcomes) and V3 (critic) build on this V1.
+
+Eval caveat: the answer key (`evals/labeling/labeler.py`) implements the same written policy, so
+with correct inputs V1's decision code should agree with it by construction. V1's decision accuracy
+therefore measures the reading step and the code's fidelity to the policy, not judgment. The
+meaningful tests become the text-reading accuracy and fresh, blind-graded letters.
+
 ## Open questions for the project owner
 
 Resolved 2026-11-09: categories (3, no "credit not processed"), costs ($15 + $20),
