@@ -15,7 +15,7 @@ from src.knowledge.rules import lookup
 # v4 (owner rulings, made explicit because v3 applied them inconsistently): an age or duration measured
 # at a date other than the order date is material whether or not the letter says "at order time"; a
 # note to the reviewer is minor if it flags a gap and material if it concedes or undercuts the letter.
-RUBRIC_VERSION = "v4-material"
+RUBRIC_VERSION = "v4-material"  # FROZEN 2026-11-12: next change only after fresh blind labels (V1)
 
 CRITERIA = {
     "addresses_requirements": "Does the draft respond to the dispute reason and cover each evidence type the "

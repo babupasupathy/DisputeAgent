@@ -301,6 +301,14 @@ def adjudication_pull(version: str, judge_file: str):
         rows.append([cid, hp, jp, how, "" if g is None else g])
         if g is not None:
             gold[cid] = g
+    # Owner rulings made after adjudication (judge_gold_overrides.csv) take precedence.
+    ov_path = RESULTS_DIR / version / "judge_gold_overrides.csv"
+    if ov_path.exists():
+        ov = {r["case_id"]: int(r["gold_pass"]) for r in csv.DictReader(open(ov_path))}
+        for r in rows:
+            if r[0] in ov:
+                r[3], r[4] = "owner ruling (override)", ov[r[0]]
+                gold[r[0]] = ov[r[0]]
     out = RESULTS_DIR / version / "judge_gold_labels.csv"
     with open(out, "w", newline="") as f:
         w = csv.writer(f)

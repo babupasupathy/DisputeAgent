@@ -1,30 +1,31 @@
 {
  "n_gold": 40,
  "settled": {
-  "agreed": 25,
+  "agreed": 23,
   "judge right": 12,
-  "original grade right": 3
+  "original grade right": 3,
+  "owner ruling (override)": 2
  },
- "gold_pass_rate": 0.7,
+ "gold_pass_rate": 0.65,
  "human_vs_gold": {
   "n": 40,
-  "agreement": 0.7,
-  "kappa": 0.063,
-  "missed_failures": 11,
+  "agreement": 0.65,
+  "kappa": 0.041,
+  "missed_failures": 13,
   "false_failures": 1
  },
  "judge_vs_gold": {
   "n": 40,
-  "agreement": 0.75,
-  "kappa": 0.519,
-  "missed_failures": 0,
+  "agreement": 0.7,
+  "kappa": 0.417,
+  "missed_failures": 2,
   "false_failures": 10
  },
  "judge_v2_vs_gold": {
   "n": 40,
-  "agreement": 0.925,
-  "kappa": 0.833,
-  "missed_failures": 0,
+  "agreement": 0.875,
+  "kappa": 0.73,
+  "missed_failures": 2,
   "false_failures": 3
  }
 }

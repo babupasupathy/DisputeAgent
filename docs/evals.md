@@ -149,6 +149,26 @@ runs on the 40 letters (`judge_v4.jsonl`, `judge_v4b.jsonl`, $2.79):
 Account age measured at the wrong date now appears in 9 of the 40 letters. Fixing the tool so it
 returns age at order time (V1) removes the whole class of error.
 
+### Frozen judge (2026-11-12)
+
+Owner rulings applied to the gold labels (`judge_gold_overrides.csv`): GEN-034 and GEN-092 fail
+(account age measured at the check date, stated with no date, reads as age at order time);
+GEN-055 passes (it states "at dispute check", which is accurate). GEN-109 ("prepaid") is a known
+judge miss, accepted.
+
+| vs 40 gold labels | Agreement | Kappa | Bad letters passed | Good letters failed |
+|---|---|---|---|---|
+| Human, first pass | 0.65 | 0.04 | 13 | 1 |
+| Judge v1 (any unsupported claim fails) | 0.70 | 0.42 | 2 | 10 |
+| Judge v2 (material only) | 0.875 | 0.73 | 2 | 3 |
+| **Judge v4 (rulings stated outright) + concession check** | **0.875** | **0.73** | **2** | **3** |
+
+v2 and v4 score the same on this set; v4 is frozen because it encodes the owner's rulings
+explicitly and is stable (two identical runs: 0/40 flips). Its known misses: GEN-107 (photo
+ruling vs the human's clarity/format fail), GEN-109 ("prepaid"); over-strict on GEN-055,
+GEN-104, GEN-115. No further tuning on these 40 letters: every rubric change so far was fitted
+to them. Next measurement: fresh V1 letters, graded blind, then adjudicated.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a
