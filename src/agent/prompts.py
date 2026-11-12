@@ -49,3 +49,82 @@ def v0_system() -> str:
         policy_text(), GROUNDING, vocabulary_text(), DRAFT_RULES,
         "Return only the JSON object described by the output schema.",
     ])
+
+
+# ---------------- V1: the model reads text and writes letters; decisions are code ----------------
+
+def v1_reader_system() -> str:
+    return """You read the free text attached to one card chargeback for an online store: the issuer's note and \
+the support messages about the order. Everything else (tracking, payment checks, refunds, deadlines) is \
+handled by code, so report only what the text says.
+
+1. Category. If you are given more than one candidate category, pick the one the issuer's note describes:
+   - item_not_received: the cardholder says the goods never arrived
+   - not_as_described: the goods arrived but were defective, damaged or different from the description
+   - fraud: the cardholder says they did not make or authorize the purchase
+   If only one candidate is given, return it.
+
+2. Four facts. For each, say whether a support message clearly states it, and if so give that message's \
+message_id and an exact quote (copied character for character from the message body) that shows it.
+   - customer_ack_receipt: the CUSTOMER says the package or item arrived / was received.
+   - merchant_offered_remedy: the MERCHANT'S AGENT offers a return, refund, replacement or exchange.
+   - merchant_ack_nondelivery: the MERCHANT'S AGENT acknowledges the package was lost, not delivered or \
+went missing.
+   - merchant_admitted_defect: the MERCHANT'S AGENT admits the item was defective, faulty or not as described.
+   Messages from "system" are automated notifications and never count. Expectation or worry is not \
+acknowledgement ("I'm still waiting", "tracking says delivered but..."). When unsure, answer false.
+
+Return only the JSON object described by the output schema."""
+
+
+def v1_reader_schema(candidates: list[str]) -> dict:
+    fact = {"type": "object", "additionalProperties": False, "required": ["present", "message_id", "quote"],
+            "properties": {"present": {"type": "boolean"}, "message_id": {"type": "string"},
+                           "quote": {"type": "string"}}}
+    return {"type": "object", "additionalProperties": False, "required": ["category", "category_rationale", "facts"],
+            "properties": {
+                "category": {"type": "string", "enum": candidates},
+                "category_rationale": {"type": "string"},
+                "facts": {"type": "object", "additionalProperties": False,
+                          "required": ["customer_ack_receipt", "merchant_offered_remedy",
+                                       "merchant_ack_nondelivery", "merchant_admitted_defect"],
+                          "properties": {k: fact for k in ["customer_ack_receipt", "merchant_offered_remedy",
+                                                           "merchant_ack_nondelivery", "merchant_admitted_defect"]}}}}
+
+
+def v1_writer_system() -> str:
+    return """You write the representment letter an online store sends to a card issuer to contest a chargeback, \
+plus short notes for the store's internal reviewer. The decision to contest has already been made by the \
+store's rules. You receive a fact sheet (verified evidence with the record each item comes from) and the \
+raw records.
+
+The letter (narrative) goes to the issuer:
+- Address the dispute reason point by point, using the evidence marked present. Lead with the evidence the \
+network expects for this reason code, then the evidence that strengthens the case.
+- Use only facts in the fact sheet or the records. Copy numbers, dates, IDs and amounts exactly. Do not \
+compute new figures except simple sums or differences of recorded amounts.
+- Account age: use only customer_account_age_days_at_order (the age when this order was placed).
+- Say only what a record shows. A photo or archived listing being on file does not tell you what it shows: \
+say it is on file and is attached, never that it shows the item's condition or that the item matched it. \
+Do not add details no record states (for example that a return label was prepaid, or why something happened).
+- Do not mention evidence that is missing, internal processes, reviews, or doubts, and never concede or \
+recommend accepting the dispute. The letter argues the merchant's case from what is on file.
+- Keep personal and payment data masked exactly as in the records.
+- Professional, concise, factual. End by asking the issuer to resolve the dispute in the merchant's favor.
+
+evidence_list: one entry per exhibit the letter relies on, naming the record it comes from.
+
+reviewer_notes: everything the reviewer must know that does not belong in the letter: missing evidence, \
+conflicts, why the case was escalated, anything to check before submitting. Plain sentences.
+
+Return only the JSON object described by the output schema."""
+
+
+def v1_writer_schema() -> dict:
+    return {"type": "object", "additionalProperties": False, "required": ["narrative", "evidence_list", "reviewer_notes"],
+            "properties": {
+                "narrative": {"type": "string"},
+                "evidence_list": {"type": "array", "items": {
+                    "type": "object", "additionalProperties": False, "required": ["item", "source"],
+                    "properties": {"item": {"type": "string"}, "source": {"type": "string"}}}},
+                "reviewer_notes": {"type": "array", "items": {"type": "string"}}}}

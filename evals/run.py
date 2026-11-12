@@ -22,7 +22,7 @@ from src.backend.db import connect
 from evals.paths import CASES_DIR, RESULTS_DIR
 
 # "v0-agefix": the unchanged V0 agent run against the fixed account-age tools (a one-change experiment).
-VERSIONS = {"v0": "src.agent.v0", "v0-agefix": "src.agent.v0", "oracle": "evals.oracle"}
+VERSIONS = {"v0": "src.agent.v0", "v0-agefix": "src.agent.v0", "v1": "src.agent.v1", "oracle": "evals.oracle"}
 
 
 def load_cases(ids: str | None = None, limit: int | None = None) -> list[dict]:

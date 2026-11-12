@@ -9,3 +9,12 @@ concurrency = 4
 [judge]
 effort = "medium"
 max_tokens = 8000
+
+# V1: the model only reads text (issuer note, support messages) and writes letters.
+[v1_reader]
+effort = "low"
+max_tokens = 4000
+
+[v1_writer]
+effort = "medium"
+max_tokens = 8000
