@@ -38,6 +38,12 @@ def _pct(xs, q):
     return round(xs[min(len(xs) - 1, int(q * len(xs)))], 2)
 
 
+# The judge rubric that passed human calibration (docs/evals.md, "Frozen judge").
+CALIBRATED_RUBRIC = "v4-material"
+CALIBRATION = {"n_letters": 40, "gold": "evals/results/v0/judge_gold_labels.csv", "agreement": 0.875, "kappa": 0.73,
+               "note": "kappa vs adjudicated human labels; rubric fitted on the same 40 letters, so optimistic"}
+
+
 def aggregate(cases: list[dict], results: dict[str, dict], judge: dict[str, dict]) -> dict:
     per = []
     errors = []
@@ -103,14 +109,21 @@ def aggregate(cases: list[dict], results: dict[str, dict], judge: dict[str, dict
                    "rate": _rate(sum(f["fabricated"] for f in fab), len(fab)),
                    "by_type": dict(Counter(k for f in fab for k in f["unsupported"]))}
 
-    jv = [judge[s["case_id"]] for s in ok if s["case_id"] in judge and judge[s["case_id"]].get("scores")]
+    judged = [s for s in ok if s["case_id"] in judge and judge[s["case_id"]].get("scores")]
+    jv = [judge[s["case_id"]] for s in judged]
     if jv:
         keys = jv[0]["scores"].keys()
+        # A letter passes when the judge passes it AND the deterministic check finds no concession.
+        passed = [judge[s["case_id"]]["pass"] and not (s.get("letter") or {}).get("concession") for s in judged]
+        rubrics = sorted({j.get("rubric_version") or "v1" for j in jv})
         draft_quality = {"n_judged": len(jv),
                          "mean_scores": {k: round(statistics.mean(j["scores"][k] for j in jv), 3) for k in keys},
-                         "pass_rate": _rate(sum(j["pass"] for j in jv), len(jv)),
+                         "pass_rate": _rate(sum(passed), len(jv)),
+                         "judge_pass_rate": _rate(sum(j["pass"] for j in jv), len(jv)),
                          "drafts_with_unsupported_claims": sum(bool(j["unsupported_claims"]) for j in jv),
-                         "judge_calibrated": False}
+                         "rubric_versions": rubrics,
+                         "judge_calibrated": rubrics == [CALIBRATED_RUBRIC],
+                         "calibration": CALIBRATION if rubrics == [CALIBRATED_RUBRIC] else None}
     else:
         draft_quality = {"n_judged": 0}
 
@@ -163,7 +176,8 @@ def headline(s: dict) -> list[tuple[str, object]]:
         ("escalation rate (pred / expected)", f"{s['escalation']['predicted_rate']} / {s['escalation']['expected_rate']}"),
         ("drafts with unsupported tokens", f"{s['fabrication']['drafts_with_unsupported_tokens']} ({s['fabrication']['rate']})"),
         ("letters with a reviewer note / a concession", f"{s['letter']['with_reviewer_note']} / {s['letter']['with_concession']}"),
-        ("draft quality pass rate (judge, uncalibrated)", s["draft_quality"].get("pass_rate", "not judged")),
+        ("draft quality pass rate (judge " + ("calibrated, kappa 0.73" if s["draft_quality"].get("judge_calibrated") else "uncalibrated") + ")",
+         s["draft_quality"].get("pass_rate", "not judged")),
         ("cost per case (USD)", s["cost_latency"]["mean_usd_per_case"]),
         ("total cost (USD)", s["cost_latency"]["total_usd"]),
         ("latency p50 / p95 (s)", f"{s['cost_latency']['latency_p50_s']} / {s['cost_latency']['latency_p95_s']}"),

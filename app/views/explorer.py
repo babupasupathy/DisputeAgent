@@ -89,12 +89,18 @@ with st.expander("Drafted response letter", expanded=dec.get("action") != "accep
 
 j = J.get(cid)
 if j and j.get("scores"):
-    with st.expander(f"Opus judge: {'pass' if j.get('pass') else 'fail'} (uncalibrated)"):
+    calibrated = j.get("rubric_version") == "v4-material"
+    with st.expander(f"Opus judge: {'pass' if j.get('pass') else 'fail'}" + ("" if calibrated else " (uncalibrated)")):
         st.write(" · ".join(f"{k.replace('_', ' ')} {v}/5" for k, v in j["scores"].items()))
+        issues = j.get("issues") or []
+        for sev, label in (("material", "**Material problems** (fail the letter)"), ("minor", "**Minor problems** (noted only)")):
+            items = [i for i in issues if i["severity"] == sev]
+            if items:
+                st.markdown(label)
+                for i in items:
+                    st.markdown(f"- “{i['claim']}”: {i['problem']}")
         for k, v in (j.get("reasoning") or {}).items():
             st.markdown(f"**{k.replace('_', ' ')}:** {v}")
-        if j.get("unsupported_claims"):
-            st.markdown("**Unsupported claims:** " + "; ".join(map(str, j["unsupported_claims"])))
 
 with st.expander("Records the agent saw (masked, synthetic)"):
     for t in res.get("trace", []):

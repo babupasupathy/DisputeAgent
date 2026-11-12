@@ -85,10 +85,11 @@ def upload(version: str):
             "required_evidence_exact": _b(pc.get("evidence", {}).get("required_exact")),
             "no_false_missing": 1.0 - _b(pc.get("evidence", {}).get("false_missing")),
             "no_unsupported_facts": 1.0 - _b(pc.get("fabrication", {}).get("fabricated")),
+            "no_concession": 1.0 - _b((pc.get("letter") or {}).get("concession")),
         }
         j = judge.get(cid)
         if j and j.get("scores"):
-            s["judge_pass"] = _b(j.get("pass"))
+            s["judge_pass"] = _b(j.get("pass") and not (pc.get("letter") or {}).get("concession"))
             s.update({f"judge_{k}": (v - 1) / 4 for k, v in j["scores"].items()})
         u = res.get("usage") or {}
         events.append({
@@ -318,7 +319,7 @@ def adjudication_pull(version: str, judge_file: str):
                "gold_pass_rate": round(sum(gold.values()) / len(gold), 3) if gold else None}
     for name, src in [("human", {c: int(h["human_pass"]) for c, h in human.items()})] + \
                      [(f.removesuffix(".jsonl"), {c: int(r["pass"]) for c, r in _latest(RESULTS_DIR / version / f).items() if r.get("scores")})
-                      for f in ("judge.jsonl", judge_file)]:
+                      for f in ("judge_v1.jsonl", judge_file)]:
         pairs = [(gold[c], src[c]) for c in gold if c in src]
         if pairs:
             summary[f"{name}_vs_gold"] = {"n": len(pairs), "agreement": round(sum(a == b for a, b in pairs) / len(pairs), 3),

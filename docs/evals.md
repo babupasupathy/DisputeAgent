@@ -169,6 +169,14 @@ ruling vs the human's clarity/format fail), GEN-109 ("prepaid"); over-strict on 
 GEN-104, GEN-115. No further tuning on these 40 letters: every rubric change so far was fitted
 to them. Next measurement: fresh V1 letters, graded blind, then adjudicated.
 
+### V0 re-scored with the frozen judge (2026-11-12)
+
+All 115 V0 letters judged with rubric v4 (`judge.jsonl`; the original run is kept as
+`judge_v1.jsonl`; $2.54 for the 75 letters not already judged). Calibrated letter pass rate
+(judge pass and no concession): **61.7%** (was 55.7% uncalibrated). Grounded is the weakest
+criterion (mean 3.91). Of the 44 failing letters, **35 fail only because of the account-age tool
+problem**; fixing it would put the pass rate near 92% (estimate, to confirm in V1).
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a

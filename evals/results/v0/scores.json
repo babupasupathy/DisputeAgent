@@ -50,17 +50,35 @@
    "amounts": 7
   }
  },
+ "letter": {
+  "with_reviewer_note": 14,
+  "with_concession": 1,
+  "concession_cases": [
+   "HW-06"
+  ]
+ },
  "draft_quality": {
   "n_judged": 115,
   "mean_scores": {
-   "addresses_requirements": 4.609,
-   "clarity": 4.574,
-   "format": 4.557,
-   "grounded": 4.452
+   "addresses_requirements": 4.591,
+   "clarity": 4.661,
+   "format": 4.478,
+   "grounded": 3.913
   },
-  "pass_rate": 0.5565,
-  "drafts_with_unsupported_claims": 47,
-  "judge_calibrated": false
+  "pass_rate": 0.6174,
+  "judge_pass_rate": 0.6174,
+  "drafts_with_unsupported_claims": 43,
+  "rubric_versions": [
+   "v4-material"
+  ],
+  "judge_calibrated": true,
+  "calibration": {
+   "n_letters": 40,
+   "gold": "evals/results/v0/judge_gold_labels.csv",
+   "agreement": 0.875,
+   "kappa": 0.73,
+   "note": "kappa vs adjudicated human labels; rubric fitted on the same 40 letters, so optimistic"
+  }
  },
  "cost_latency": {
   "total_usd": 3.7884,

@@ -46,10 +46,10 @@ st.markdown(
 2. **Accepting cases that needed a person (13).** All 13 are disputes with conflicting records. Under the
    policy, conflicts go to a human; V0 accepted them instead, giving up money with no review. This is the
    error to drive down first.
-3. **Letter grounding.** The judge passed **{dq['pass_rate']:.0%}** of {dq['n_judged']} letters (uncalibrated);
-   the weakest criterion was grounding. The deterministic fact check flagged {fab['drafts_with_unsupported_tokens']}
-   letters, but every flag was the $35 policy cost, which appears in the instructions rather than the records:
-   a harness false positive, not an invented fact.
+3. **Letters: one data bug causes most failures.** The calibrated judge passes **{dq['pass_rate']:.0%}** of
+   {dq['n_judged']} letters. 35 of the failures come from a single tool problem: customer history reports account age
+   on the day the records were pulled, and the agent presents it as age at order time. Fixing the tool, not the
+   prompt, is the first change for V1 (estimated pass rate about 92% once fixed).
 """
 )
 
@@ -58,9 +58,39 @@ c = st.columns(4)
 c[0].metric("Required list exactly right", f"{ev['required_exact_rate']:.1%}")
 c[1].metric("Real evidence marked missing", f"{ev['false_missing_rate']:.1%}")
 c[2].metric("Evidence claimed but absent", f"{ev['false_present_rate']:.1%}")
-c[3].metric("Letters passing judge", f"{dq['pass_rate']:.0%}", "uncalibrated", delta_color="off", delta_arrow="off")
+c[3].metric("Letters passing judge", f"{dq['pass_rate']:.0%}",
+            "calibrated" if dq.get("judge_calibrated") else "uncalibrated", delta_color="off", delta_arrow="off")
 ms = dq["mean_scores"]
 st.caption("Judge mean scores (1–5): " + " · ".join(f"{k.replace('_', ' ')} {v:.2f}" for k, v in ms.items()))
+
+st.subheader("How the letter judge was calibrated")
+st.markdown(
+    """
+An LLM judge (Opus 5.5) grades every letter. Before trusting it, I graded 40 letters blind myself, then settled
+every disagreement with the judge's reasoning and the records side by side.
+
+| Grader vs 40 settled labels | Agreement | Kappa | Bad letters passed | Good letters failed |
+|---|---|---|---|---|
+| My first-pass grades | 65% | 0.04 | 13 | 1 |
+| Original judge: any unsupported claim fails | 70% | 0.42 | 2 | 10 |
+| **Final judge: material errors only, plus a code check for concessions** | **87.5%** | **0.73** | **2** | **3** |
+
+- **Unaided review misses contradictions.** Checking claims one at a time, I passed 13 letters that contradict the
+  records or invent facts (for example an invented "pending internal review").
+- **The original judge was too strict.** It failed letters over wording such as "accepted the return policy *at checkout*".
+- **The fix was product rules, not prompt tweaks:** what counts as a material error (contradiction, invented fact,
+  wrong number, conceding the dispute), written into the rubric, with clear-cut rules moved into code.
+- **Stable:** two identical runs agreed on all 40 letters. The rubric is now frozen; fresh V1 letters graded blind are the next test.
+
+Caveat: the rubric was refined on these same 40 letters, so 0.73 is optimistic.
+"""
+)
+c = st.columns(3)
+c[0].metric("Letters with a note to the reviewer", f"{s['letter']['with_reviewer_note']}", "allowed: every draft is reviewed",
+            delta_color="off", delta_arrow="off")
+c[1].metric("Letters conceding the dispute", f"{s['letter']['with_concession']}", "fails automatically",
+            delta_color="off", delta_arrow="off")
+c[2].metric("Account age at the wrong date", "35 letters", "fail on this alone", delta_color="off", delta_arrow="off")
 
 st.subheader("Cost and speed")
 pc, outs = per_case("v0"), outputs("v0")
@@ -73,4 +103,4 @@ c[2].metric("Avg output tokens", f"{cl['mean_output_tokens']:,}")
 c[3].metric("Model served", ", ".join(cl["served_models"]))
 st.scatter_chart(lat, x="latency_s", y="cost_usd", x_label="latency (s)", y_label="cost (USD)")
 st.caption("Output tokens (including the model's reasoning) are about three quarters of the cost per case. "
-           "Grading the letters with Opus cost $3.93, slightly more than running the agent.")
+           "Grading 115 letters with Opus costs about $4 per run, about the same as running the agent.")
