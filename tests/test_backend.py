@@ -80,3 +80,22 @@ def test_api_smoke(monkeypatch, fresh_build, committed_cases):
     assert client.get("/orders/NOPE").status_code == 404
     r = client.post(f"/processor/disputes/{d['dispute_id']}/submit", json={"payload": {}})
     assert r.status_code == 403
+
+
+def test_account_age_is_measured_at_order_time(conn, committed_cases):
+    """Regression: V0 letters stated account age measured to the lookup date as age at order time."""
+    from datetime import datetime, timedelta
+    for case in committed_cases:
+        if case["labels"]["category"] != "fraud":
+            continue
+        order = repo.get_order_details(conn, case["dispute"]["order_id"])
+        hist = repo.get_customer_history(conn, order["customer_id"])
+        age = order["customer_account_age_days_at_order"]
+        created = datetime.fromisoformat(order["customer_account_created_at"].replace("Z", ""))
+        placed = datetime.fromisoformat(order["created_at"].replace("Z", ""))
+        assert age == (placed - created).days >= 0
+        # the label's "established account" evidence uses the same definition
+        assert ("established_account" in case["labels"]["strong_present"]) == (placed - created >= timedelta(days=180))
+        assert "account_age_days" not in hist
+        this = next(o for o in hist["orders"] if o["order_id"] == order["order_id"])
+        assert this["account_age_days_at_order"] == age

@@ -59,6 +59,8 @@ def _one(conn, sql, args, what):
 
 def get_order_details(conn: sqlite3.Connection, order_id: str) -> dict:
     o = _one(conn, "SELECT * FROM orders WHERE order_id=?", (order_id,), f"order {order_id}")
+    created = _one(conn, "SELECT created_at FROM customers WHERE customer_id=?", (o["customer_id"],),
+                   f"customer {o['customer_id']}")["created_at"]
     items = []
     for i in conn.execute(
             """SELECT i.*, p.title, s.title AS snap_title, s.description AS snap_desc, s.captured_at
@@ -83,6 +85,10 @@ def get_order_details(conn: sqlite3.Connection, order_id: str) -> dict:
                     "cvv_legend": "M=match N=no match U=unavailable"},
         "ip_token": ip_token(o["ip_address"]), "device_id": o["device_id"],
         "return_policy_accepted": o["policy_version_accepted"],
+        # Account age is evidence about the customer when THIS order was placed (Visa CE3.0, "established
+        # account"), so it is computed to the order date, never to today.
+        "customer_account_created_at": created,
+        "customer_account_age_days_at_order": (_dt(o["created_at"]) - _dt(created)).days,
     }
 
 
@@ -107,7 +113,6 @@ def get_shipping_tracking(conn: sqlite3.Connection, order_id: str) -> dict:
 
 def get_customer_history(conn: sqlite3.Connection, customer_id: str) -> dict:
     c = _one(conn, "SELECT * FROM customers WHERE customer_id=?", (customer_id,), f"customer {customer_id}")
-    t = now().replace(tzinfo=None)
     orders = []
     for o in conn.execute(
             """SELECT o.order_id, o.created_at, o.total, o.device_id, o.ip_address, s.status AS ship_status,
@@ -115,6 +120,7 @@ def get_customer_history(conn: sqlite3.Connection, customer_id: str) -> dict:
                FROM orders o LEFT JOIN shipments s USING(order_id)
                WHERE o.customer_id=? ORDER BY o.created_at""", (customer_id,)):
         orders.append({"order_id": o["order_id"], "created_at": o["created_at"], "total": o["total"],
+                       "account_age_days_at_order": (_dt(o["created_at"]) - _dt(c["created_at"])).days,
                        "shipment_status": o["ship_status"], "disputed": o["n_disputes"] > 0,
                        "device_id": o["device_id"], "ip_token": ip_token(o["ip_address"])})
     disputes = [dict(dispute_id=d["dispute_id"], order_id=d["order_id"], reason_code=d["reason_code"],
@@ -122,8 +128,9 @@ def get_customer_history(conn: sqlite3.Connection, customer_id: str) -> dict:
                 for d in conn.execute("SELECT * FROM disputes WHERE customer_id=? ORDER BY received_at",
                                       (customer_id,))]
     return {
+        # No "account age as of today": agents read it as age at order time (35 of 115 V0 letters).
+        # Each order carries the account's age when that order was placed.
         "customer_id": customer_id, "email": mask_email(c["email"]), "account_created_at": c["created_at"],
-        "account_age_days": (t - _dt(c["created_at"])).days,
         "orders": orders, "disputes": disputes,
     }
 
