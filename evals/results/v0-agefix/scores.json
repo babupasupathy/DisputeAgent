@@ -1,0 +1,260 @@
+{
+ "n_cases": 162,
+ "n_scored": 162,
+ "n_errors": 0,
+ "classification": {
+  "category_accuracy": 1.0,
+  "reason_code_accuracy": 1.0
+ },
+ "tool_use": {
+  "applicable": false
+ },
+ "evidence": {
+  "required_set_correct_rate": 0.0185,
+  "required_exact_rate": 0.0185,
+  "false_missing_rate": 0.0026,
+  "false_present_rate": 0.0408,
+  "strong_f1": 0.4243
+ },
+ "decision": {
+  "accuracy": 0.7654,
+  "by_category": {
+   "fraud": 0.8491,
+   "item_not_received": 0.8393,
+   "not_as_described": 0.6038
+  },
+  "confusion_expected_x_predicted": {
+   "accept->accept": 32,
+   "accept->escalate": 4,
+   "escalate->accept": 12,
+   "escalate->escalate": 62,
+   "escalate->fight": 1,
+   "fight->accept": 1,
+   "fight->escalate": 20,
+   "fight->fight": 30
+  },
+  "wrongful_auto_accepts": 13,
+  "wrongful_auto_accept_usd": 4828.0,
+  "fought_should_escalate": 1
+ },
+ "escalation": {
+  "precision": 0.7209,
+  "recall": 0.8267,
+  "predicted_rate": 0.5309,
+  "expected_rate": 0.463
+ },
+ "fabrication": {
+  "drafts_with_unsupported_tokens": 7,
+  "rate": 0.0432,
+  "by_type": {
+   "amounts": 7
+  }
+ },
+ "letter": {
+  "with_reviewer_note": 8,
+  "with_concession": 0,
+  "concession_cases": []
+ },
+ "draft_quality": {
+  "n_judged": 117,
+  "mean_scores": {
+   "addresses_requirements": 4.855,
+   "clarity": 4.786,
+   "format": 4.718,
+   "grounded": 4.342
+  },
+  "pass_rate": 0.9145,
+  "judge_pass_rate": 0.9145,
+  "drafts_with_unsupported_claims": 10,
+  "rubric_versions": [
+   "v4-material"
+  ],
+  "judge_calibrated": true,
+  "calibration": {
+   "n_letters": 40,
+   "gold": "evals/results/v0/judge_gold_labels.csv",
+   "agreement": 0.875,
+   "kappa": 0.73,
+   "note": "kappa vs adjudicated human labels; rubric fitted on the same 40 letters, so optimistic"
+  }
+ },
+ "cost_latency": {
+  "total_usd": 3.8432,
+  "mean_usd_per_case": 0.02372,
+  "latency_p50_s": 10.88,
+  "latency_p95_s": 17.41,
+  "mean_input_tokens": 2580,
+  "mean_output_tokens": 1782,
+  "served_models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ "failures": {
+  "classification": [],
+  "false_missing": [
+   {
+    "case_id": "GEN-062",
+    "items": [
+     "delivery_confirmation"
+    ]
+   }
+  ],
+  "false_present": [
+   {
+    "case_id": "GEN-014",
+    "items": [
+     "address_match"
+    ]
+   },
+   {
+    "case_id": "GEN-115",
+    "items": [
+     "return_policy_accepted"
+    ]
+   },
+   {
+    "case_id": "GEN-121",
+    "items": [
+     "product_listing"
+    ]
+   },
+   {
+    "case_id": "HW-05",
+    "items": [
+     "address_match"
+    ]
+   }
+  ],
+  "decision": [
+   {
+    "case_id": "GEN-010",
+    "scenario": "strong",
+    "expected": "fight",
+    "predicted": "escalate",
+    "amount": 395.0
+   },
+   {
+    "case_id": "GEN-014",
+    "scenario": "weak",
+    "expected": "accept",
+    "predicted": "escalate",
+    "amount": 395.0
+   },
+   {
+    "case_id": "GEN-026",
+    "scenario": "conflicting",
+    "expected": "escalate",
+    "predicted": "accept",
+    "amount": 345.0
+   },
+   {
+    "case_id": "GEN-028",
+    "scenario": "conflicting",
+    "expected": "escalate",
+    "predicted": "accept",
+    "amount": 395.0
+   },
+   {
+    "case_id": "GEN-029",
+    "scenario": "conflicting",
+    "expected": "escalate",
+    "predicted": "accept",
+    "amount": 345.0
+   },
+   {
+    "case_id": "GEN-030",
+    "scenario": "conflicting",
+    "expected": "escalate",
+    "predicted": "accept",
+    "amount": 345.0
+   },
+   {
+    "case_id": "GEN-036",
+    "scenario": "partial_refund_mismatch",
+    "expected": "escalate",
+    "predicted": "fight",
+    "amount": 395.0
+   },
+   {
+    "case_id": "GEN-051",
+    "scenario": "strong",
+    "expected": "fight",
+    "predicted": "escalate",
+    "amount": 145.0
+   },
+   {
+    "case_id": "GEN-052",
+    "scenario": "strong",
+    "expected": "fight",
+    "predicted": "escalate",
+    "amount": 279.0
+   },
+   {
+    "case_id": "GEN-053",
+    "scenario": "strong",
+    "expected": "fight",
+    "predicted": "escalate",
+    "amount": 112.0
+   },
+   {
+    "case_id": "GEN-056",
+    "scenario": "strong",
+    "expected": "fight",
+    "predicted": "escalate",
+    "amount": 345.0
+   },
+   {
+    "case_id": "GEN-058",
+    "scenario": "strong",
+    "expected": "fight",
+    "predicted": "escalate",
+    "amount": 549.0
+   }
+  ],
+  "fabrication": [
+   {
+    "case_id": "GEN-046",
+    "amounts": [
+     "$35.00"
+    ]
+   },
+   {
+    "case_id": "GEN-047",
+    "amounts": [
+     "$35.00"
+    ]
+   },
+   {
+    "case_id": "GEN-097",
+    "amounts": [
+     "$35.00"
+    ]
+   },
+   {
+    "case_id": "GEN-098",
+    "amounts": [
+     "$35.00"
+    ]
+   },
+   {
+    "case_id": "GEN-119",
+    "amounts": [
+     "$35.00"
+    ]
+   },
+   {
+    "case_id": "GEN-144",
+    "amounts": [
+     "$35.00"
+    ]
+   },
+   {
+    "case_id": "HW-11",
+    "amounts": [
+     "$35.00"
+    ]
+   }
+  ],
+  "errors": []
+ }
+}

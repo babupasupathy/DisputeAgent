@@ -177,6 +177,34 @@ All 115 V0 letters judged with rubric v4 (`judge.jsonl`; the original run is kep
 criterion (mean 3.91). Of the 44 failing letters, **35 fail only because of the account-age tool
 problem**; fixing it would put the pass rate near 92% (estimate, to confirm in V1).
 
+### Experiment: account-age tool fix only (`v0-agefix`, 2026-11-12)
+
+The unchanged V0 agent re-run on all 162 cases with one change: the tools report account age at
+order time (`customer_account_age_days_at_order`) and no longer return age measured to the
+lookup date. Letters graded with the frozen judge. Agent $3.84, judge $4.02.
+
+| | V0 | v0-agefix |
+|---|---|---|
+| **Letter pass rate (calibrated judge + concession check)** | **61.7%** (71/115) | **91.5%** (107/117) |
+| Letters failing on account age | 38 | **0** |
+| Grounded (mean, 1-5) | 3.91 | 4.34 |
+| Decision accuracy | 75.9% | 76.5% |
+| Wrongful auto-accepts | 14 ($5,377) | 13 ($4,828) |
+| Real evidence marked missing | 1.3% | 0.3% |
+| Cost per case | $0.0234 | $0.0237 |
+
+A data fix, not a prompt change, removed the largest class of letter error; decisions are
+unchanged, as expected, because the fix only changes what letters say about account age. The
+pre-run estimate was "about 92%".
+
+Remaining 10 failing letters: claiming the item matched its listing (GEN-104, GEN-132),
+"prepaid" return label (GEN-099, GEN-136), asking the issuer to rely on an unconfirmed address
+match (GEN-016, GEN-019), a prior order credited with a device/IP match it does not have
+(GEN-081), gap disclosures written into the issuer letter (GEN-053), and two concessions inside
+the letter (HW-06, HW-12). The deterministic concession check caught neither of those two
+concessions ("not recommended", "does not support the merchant"): its phrase list is narrow, so
+the judge remains the main defence there.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a

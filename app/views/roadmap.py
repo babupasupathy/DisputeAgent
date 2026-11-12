@@ -10,7 +10,10 @@ st.markdown(
     "- **Decision policy.** Expected-value-first rules with thresholds in config, signed off as product decisions.\n"
     "- **Eval harness.** Ten scoring dimensions, a fact checker for letters, an Opus judge, and an answer-key "
     "self-test that scores 100%.\n"
-    "- **V0 baseline measured.** 76% decision accuracy, 14 wrongful auto-accepts ($5,377), $0.023 per case."
+    "- **V0 baseline measured.** 76% decision accuracy, 14 wrongful auto-accepts ($5,377), $0.023 per case.\n"
+    "- **Letter judge calibrated** against 40 human-graded letters (kappa 0.73 vs settled labels).\n"
+    "- **Data fix measured on its own.** Account age reported at order time instead of today: letter pass rate "
+    "61.7% → 91.5%, account-age failures 38 → 0, decisions unchanged. Same agent, same prompt."
 )
 
 st.subheader("Next")
