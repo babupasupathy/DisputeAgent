@@ -21,7 +21,8 @@ from src.agent.llm import agent_config, make_client, model_from_env
 from src.backend.db import connect
 from evals.paths import CASES_DIR, RESULTS_DIR
 
-VERSIONS = {"v0": "src.agent.v0", "oracle": "evals.oracle"}
+# "v0-agefix": the unchanged V0 agent run against the fixed account-age tools (a one-change experiment).
+VERSIONS = {"v0": "src.agent.v0", "v0-agefix": "src.agent.v0", "oracle": "evals.oracle"}
 
 
 def load_cases(ids: str | None = None, limit: int | None = None) -> list[dict]:
