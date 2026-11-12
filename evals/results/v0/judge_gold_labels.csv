@@ -1,0 +1,41 @@
+case_id,human_pass,judge_pass(judge_v2.jsonl),how_settled,gold_pass
+GEN-002,1,1,agreed,1
+GEN-005,1,1,agreed,1
+GEN-006,1,1,agreed,1
+GEN-008,1,1,agreed,1
+GEN-009,1,0,judge right,0
+GEN-012,1,1,agreed,1
+GEN-015,1,1,agreed,1
+GEN-025,1,1,agreed,1
+GEN-029,1,0,judge right,0
+GEN-034,1,1,agreed,1
+GEN-036,1,1,agreed,1
+GEN-055,1,1,agreed,1
+GEN-075,1,0,judge right,0
+GEN-083,1,0,judge right,0
+GEN-086,1,0,judge right,0
+GEN-087,1,1,agreed,1
+GEN-092,1,1,agreed,1
+GEN-094,0,1,judge right,1
+GEN-095,1,1,agreed,1
+GEN-100,1,1,agreed,1
+GEN-104,1,0,original grade right,1
+GEN-105,1,1,agreed,1
+GEN-107,0,0,agreed,0
+GEN-108,1,1,agreed,1
+GEN-109,1,0,judge right,0
+GEN-110,1,0,original grade right,1
+GEN-113,1,1,agreed,1
+GEN-115,1,0,original grade right,1
+GEN-118,1,1,agreed,1
+GEN-137,1,1,agreed,1
+GEN-140,1,1,agreed,1
+GEN-143,1,1,agreed,1
+HW-02,1,0,judge right,0
+HW-03,1,0,judge right,0
+HW-06,1,0,judge right,0
+HW-07,1,1,agreed,1
+HW-08,1,1,agreed,1
+HW-09,1,0,judge right,0
+HW-14,1,0,not answered,
+HW-15,1,1,agreed,1

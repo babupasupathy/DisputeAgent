@@ -1,0 +1,31 @@
+{
+ "n_gold": 39,
+ "settled": {
+  "agreed": 25,
+  "judge right": 11,
+  "not answered": 1,
+  "original grade right": 3
+ },
+ "gold_pass_rate": 0.718,
+ "human_vs_gold": {
+  "n": 39,
+  "agreement": 0.718,
+  "kappa": 0.073,
+  "missed_failures": 10,
+  "false_failures": 1
+ },
+ "judge_vs_gold": {
+  "n": 39,
+  "agreement": 0.744,
+  "kappa": 0.504,
+  "missed_failures": 0,
+  "false_failures": 10
+ },
+ "judge_v2_vs_gold": {
+  "n": 39,
+  "agreement": 0.923,
+  "kappa": 0.825,
+  "missed_failures": 0,
+  "false_failures": 3
+ }
+}

@@ -87,6 +87,33 @@ only on wording (GEN-015, GEN-025, GEN-105, GEN-118, GEN-137). It also found rea
 missed earlier: an internal reviewer note left in the issuer letter (HW-06) and a fifth
 account-age error (HW-09).
 
+### Adjudicated labels (2026-11-12)
+
+The 15 letters where the human grade and the v2 judge disagreed were settled by the project owner
+in Braintrust (`v0-judge-adjudication`), with both views and the records shown. Combined with the
+25 letters where they already agreed, that gives gold labels for 39 letters
+(`evals/results/v0/judge_gold_labels.csv`; HW-14 left unanswered).
+
+Settled: judge right 11, original human grade right 3 (GEN-104, GEN-110, GEN-115), unanswered 1.
+Gold pass rate 72%.
+
+| Grader vs gold (n = 39) | Agreement | Kappa | Errors missed (passed a bad letter) | Good letters failed |
+|---|---|---|---|---|
+| Human, first pass | 0.72 | 0.07 | 10 | 1 |
+| Judge v1 (any unsupported claim fails) | 0.74 | 0.50 | 0 | 10 |
+| **Judge v2 (material problems only)** | **0.92** | **0.83** | **0** | **3** |
+
+Judge v2 clears the 0.6 kappa bar and misses no failing letter; its 3 errors are over-strict
+(two "dispatch photo of item condition" descriptions the owner ruled minor, and one letter failed
+on a 3 for addresses_requirements). **Status: provisionally calibrated.** Two biases make this
+optimistic: the rubric examples were written after reading these letters, and the 25 agreed
+letters count toward gold because the human and v2 agreed on them. Confirm on fresh V1 letters
+graded blind.
+
+Owner rulings recorded during adjudication: "prepaid return label" when the message only says
+"return label attached" is **material** (adds a fact about who pays); describing a dispatch photo
+as showing "item condition" when only its existence is recorded is **minor**.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a
