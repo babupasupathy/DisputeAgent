@@ -1,0 +1,16 @@
+case_id,human_pass,judge_pass(judge.jsonl),how_settled,gold_pass
+GEN-006,0,1,"owner ruling: letter claims address match but delivery scan is in another city (data bug, fixed in e1c13ac)",0
+GEN-010,1,1,agreed,1
+GEN-033,1,1,agreed,1
+GEN-052,0,1,"owner ruling: letter claims address match but delivery scan is in another city (data bug, fixed in e1c13ac)",0
+GEN-053,1,1,agreed,1
+GEN-090,1,1,agreed,1
+GEN-131,1,1,agreed,1
+GEN-136,1,1,agreed,1
+GEN-137,1,1,agreed,1
+GEN-142,1,1,agreed,1
+HW-05,1,1,agreed,1
+HW-07,1,1,agreed,1
+HW-08,1,1,agreed,1
+HW-12,1,1,agreed,1
+HW-15,1,1,agreed,1

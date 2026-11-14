@@ -244,6 +244,31 @@ policy as the answer key; given the true facts it matches on all 162 cases), so 
 step, which was right on every case. Letter fixes were developed on these 162 cases. Next measurement:
 fresh letters graded blind.
 
+### Blind check of the frozen judge on V1 letters (2026-11-14)
+
+20 V1 letters the rubric was never tuned on, graded blind by the project owner in Braintrust:
+15 drafted up front (`v1-judge-calibration`) and 5 drafted on demand after a simulated reviewer chose
+to contest (`v1-ondemand-judge-calibration`). Settled labels in `evals/results/v1*/judge_gold_labels.csv`.
+
+| | Up front (15) | On demand (5) | All (20) |
+|---|---|---|---|
+| Pass/fail agreement, judge vs owner | 13 | 1 | **14 / 20** |
+| Bad letters the judge passed | 2 | 4 | **6** |
+| Good letters the judge failed | 0 | 0 | **0** |
+
+All six disagreements have one cause, found by the owner: the letter says the carrier delivered to the
+order's address (citing `delivered_address_match = true`) while the delivery scan is in a different city.
+The judge trusted the flag and never compared it with the scan location. The cause was a data bug: the
+generator picked the destination city at random, so 112 of 131 "matched" deliveries were scanned in
+another city. Fixed in the generator (labels unchanged, regression test added). On every letter without
+that contradiction, the judge and the owner agreed (14 of 14), and the judge failed no good letter.
+
+Lessons: (1) a blind check on fresh letters found a failure mode the 40-letter calibration could not,
+because every V0 letter had the same flaw and nobody noticed it then; (2) the judge checks claims against
+fields but not fields against each other, so cross-field contradictions are a known judge blind spot;
+(3) human grading found three data-quality bugs in this project (account age, reviewer notes in issuer
+letters, scan location), all fixed at the source.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a
