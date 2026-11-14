@@ -332,6 +332,24 @@ and defect 30/30, receipt 29/30 (MSY-15, "I want my money back", which the owner
 Apology signal raised on MSY-06, MSY-20, MSY-30. Caveat: the definitions were refined on these 30 threads;
 the next V1 run on the 162 cases confirms the new definitions leave decisions unchanged.
 
+### Haiku 5.5 vs Sonnet 5.5 for reading (2026-11-14)
+
+Same 30 messy threads, owner-ruled labels, two Sonnet runs and three Haiku runs:
+
+| | Sonnet 5.5 (2 runs) | Haiku 5.5 (3 runs) |
+|---|---|---|
+| Threads with every field right | 29, 29 of 30 | 28, 27, 27 of 30 |
+| Category, remedy, non-delivery, defect admission | 30/30 every run | 30/30 every run |
+| Customer acknowledged receipt | 29/30 | 28, 27, 27 of 30 |
+| False positives (claimed a fact the owner rejected) | 0 | 0 |
+| Cost for 30 threads | $0.104 | $0.005-0.006 (about 1/18) |
+| Typical latency per thread | 2.3 s | 1.9 s |
+
+Haiku's extra misses are all the same kind: receipt implied by a complaint about the item (MSY-18 "I returned
+it last week", MSY-20 "You said it was wool"), both not-as-described threads where receipt is not evidence the
+decision uses. On every field that drives a decision, Haiku matched Sonnet on every run, and neither model ever
+claimed a fact that was not there.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a
