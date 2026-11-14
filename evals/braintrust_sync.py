@@ -68,7 +68,12 @@ def _b(x) -> float:
     return 1.0 if x else 0.0
 
 
-def upload(version: str):
+# Braintrust's free plan counts every score (11,000 a month). Upload only these four by default; the
+# rest go into metadata, still visible per row. --all-scores restores the full set.
+HEADLINE_SCORES = ("decision_correct", "no_wrongful_auto_accept", "escalation_correct", "judge_pass")
+
+
+def upload(version: str, all_scores: bool = False):
     cases, outs, per, judge = _load(version)
     scores = json.loads((RESULTS_DIR / version / "scores.json").read_text())
     events = []
@@ -101,8 +106,9 @@ def upload(version: str):
             "expected": {"action": lab["decision"], "category": lab["category"], "reason_code": lab["reason_code"],
                          "required_present": lab["required_present"], "required_missing": lab["required_missing"],
                          "reason": lab.get("decision_reason")},
-            "scores": s,
-            "metadata": {"scenario": case["scenario"], "category": lab["category"], "network": case["dispute"]["network"],
+            "scores": s if all_scores else {k: v for k, v in s.items() if k in HEADLINE_SCORES},
+            "metadata": {"other_scores": None if all_scores else {k: v for k, v in s.items() if k not in HEADLINE_SCORES},
+                         "scenario": case["scenario"], "category": lab["category"], "network": case["dispute"]["network"],
                          "amount": case["dispute"]["amount"], "source": case["source"],
                          "wrongful_auto_accept_usd": pc.get("decision", {}).get("wrongful_auto_accept_amount", 0.0),
                          "cost_usd": u.get("cost_usd"), "latency_s": u.get("latency_s"),
@@ -336,10 +342,11 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["upload", "calibration-upload", "calibration-pull",
                                     "adjudication-upload", "adjudication-pull"])
     ap.add_argument("--judge-file", default="judge_v2.jsonl")
+    ap.add_argument("--all-scores", action="store_true", help="upload every score (uses more of the plan's quota)")
     ap.add_argument("--version", required=True)
     ap.add_argument("--n", type=int, default=40)
     a = ap.parse_args()
-    {"upload": lambda: upload(a.version),
+    {"upload": lambda: upload(a.version, a.all_scores),
      "calibration-upload": lambda: calibration_upload(a.version, a.n),
      "calibration-pull": lambda: calibration_pull(a.version),
      "adjudication-upload": lambda: adjudication_upload(a.version, a.judge_file),

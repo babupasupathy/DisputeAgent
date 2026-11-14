@@ -321,8 +321,12 @@ Draft-quality numbers are reported as "uncalibrated" until this is done.
 ## Braintrust
 
 `python -m evals.braintrust_sync upload --version <v>` pushes a version's stored results to the
-Braintrust project `DisputeAgent` as experiment `<v>`, with every deterministic score (0-1) and the
-judge's scores, so versions can be compared case by case. It uploads results only; no model calls.
+Braintrust project `DisputeAgent` as experiment `<v>`, so versions can be compared case by case. It
+uploads results only; no model calls. To stay within the free plan's 11,000 scores a month it sends four
+scores per case (decision correct, no wrongful auto-accept, escalation correct, judge pass) and puts the
+rest in each row's metadata (`other_scores`); `--all-scores` sends everything. The plan limit was hit on
+2026-11-14 during the V1 run 4 upload, which left experiment `v1` mixed (86 rows run 4, 76 run 3);
+re-upload scheduled for 2026-12-01.
 
 Judge calibration runs through Braintrust's review screen:
 ```bash
