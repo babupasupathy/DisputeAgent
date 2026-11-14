@@ -1,0 +1,38 @@
+{
+ "letters": 48,
+ "judged": 0,
+ "pass_rate": null,
+ "guardrail_would_block": [
+  "GEN-026",
+  "GEN-028",
+  "GEN-030",
+  "GEN-032",
+  "GEN-123",
+  "GEN-124",
+  "GEN-125",
+  "GEN-126",
+  "GEN-127",
+  "GEN-128",
+  "GEN-129",
+  "GEN-130"
+ ],
+ "blocked_that_failed": [
+  "GEN-026",
+  "GEN-028",
+  "GEN-030",
+  "GEN-032",
+  "GEN-123",
+  "GEN-124",
+  "GEN-125",
+  "GEN-126",
+  "GEN-127",
+  "GEN-128",
+  "GEN-129",
+  "GEN-130"
+ ],
+ "pass_rate_after_guardrail": null,
+ "letters_after_guardrail": 0,
+ "failed": [],
+ "fact_check_flags": [],
+ "letter_cost_usd": 1.108
+}

@@ -350,6 +350,30 @@ it last week", MSY-20 "You said it was wool"), both not-as-described threads whe
 decision uses. On every field that drives a decision, Haiku matched Sonnet on every run, and neither model ever
 claimed a fact that was not there.
 
+### V1 final run (run 5, 2026-11-14)
+
+Everything above combined: corrected data, plain-language letters, prior orders with exact day counts, the
+owner's reading definitions (Sonnet reads and writes), the apology signal and the admission guardrail.
+
+| | V0 | v0-agefix | **V1 final** |
+|---|---|---|---|
+| Decisions correct | 75.9% | 76.5% | **100%** (162/162) |
+| Wrongful auto-accepts | 14 ($5,377) | 13 ($4,828) | **0** |
+| Required evidence exactly right | 1.9% | 1.9% | **100%** |
+| Up-front letters passing (judged, no corrections) | 61.7% | 91.5% | **96.1%** (73/76) |
+| Letters flagged by the fact checker / with field names | 7 / – | 7 / – | **0 / 0** |
+| Cost per case | $0.0234 | $0.0237 | **$0.0116** |
+| Latency p50 / p95 | 10.6 / 16.9 s | 10.9 / 17.4 s | **2.6 / 12.2 s** |
+
+The prior-orders wording fix is confirmed: none of the earlier "120 to 365 days" false failures recur, and the
+up-front pass rate as judged went 89.5% -> 96.1%. The new reading definitions left every decision unchanged.
+Fight letters 50/51, escalation letters 23/25. The 3 failures all overstate a remedy: "the remedy offered
+remains available" (GEN-131), and two letters implying an offer conformed to a policy whose terms are not on
+file or calling a remedy prompt when the return was received and never refunded (HW-15, HW-06). The apology
+signal reached the reviewer notes in 34 cases.
+
+On-demand letters: interrupted when the API credit ran out (48 of 50 drafted, none judged yet); resumable.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a
