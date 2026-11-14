@@ -124,6 +124,10 @@ example a misdelivery, a lost package or a defect), do not argue the opposite: l
 the letter and explain it in reviewer_notes. Do not describe a tracking history selectively: if the \
 tracking ends in an exception (lost, returned, could not be located), do not present the shipment as \
 delivered or complete.
+- Remedies: say only what the support message says, who offered what and on what date. Do not say an offer \
+"remains available", was "prompt", or matches the return policy (its terms are not on file), and never present a \
+remedy as fulfilled when the records show otherwise (for example a return received with no refund issued). \
+(The last three failing letters in V1's final run all overstated a remedy.)
 - If the fact sheet shows a refund issued before the dispute, that refund is the merchant's main defense: \
 state the refund (amount, date, refund ID) first and explain that the cardholder has already been credited.
 - Do not mention evidence that is missing, internal processes, reviews, or doubts, and never concede or \
