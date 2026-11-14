@@ -97,8 +97,13 @@ def evidence(rec: dict, facts: dict[str, dict]) -> tuple[dict[str, bool], dict[s
         "delivered_to_billing_address": yn(ev["delivered_to_billing_address"],
                                            "the order was shipped to the billing address and delivered",
                                            "the order was not delivered to the billing address"),
-        "prior_undisputed_orders": f"{len(in_window)} earlier delivered, undisputed order(s) placed 120 to 365 days before this order"
-                                   + (f": {', '.join(p['order_id'] for p in in_window)}" if in_window else ""),
+        # Exact day counts: "placed 120 to 365 days before" was true but read as a claim about the spread of
+        # dates, and the judge failed 7 letters for it (run 4, 2026-11-14).
+        "prior_undisputed_orders": (f"{len(in_window)} earlier delivered, undisputed orders: "
+                                    + ", ".join(f"{p['order_id']} (placed {p['created_at'][:10]}, "
+                                                f"{(order_at - _dt(p['created_at'])).days} days before this order)"
+                                                for p in in_window)) if in_window
+                                   else "no earlier delivered, undisputed orders placed 120 to 365 days before this order",
         "device_ip_match": f"this order came from the same device and network (IP) as earlier undisputed order {dev_ip[0]['order_id']}"
                            if dev_ip else "no earlier undisputed order from the same device and network",
         "established_account": f"the customer's account was {age} days old when this order was placed",
