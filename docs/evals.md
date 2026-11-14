@@ -297,6 +297,16 @@ conformed to a policy whose terms are not on file). On demand, the remaining fai
 categories as before: arguing against the merchant's own admission of misdelivery or defect, AVS failed,
 one year slip.
 
+### Admission guardrail for on-demand letters (2026-11-14)
+
+`draft_letter()` no longer drafts a contest letter when the merchant's own agent acknowledged non-delivery
+or admitted a defect (verified quote in the support log); it returns a warning instead, and the reviewer must
+pass `override_admission=True` to draft anyway. The reviewer brief shows the same warning. Measured on the
+stored run 4 on-demand letters (no new model calls; the eval's simulated reviewer overrides so every letter
+is still graded): the guardrail would block 12 of 50 cases, 8 of which were failing letters; pass rate on
+the letters it lets through is 78.9% (30/38), up from 68% overall. Two of the remaining 8 failures are the
+verified "120 to 365 days" judge false failures.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a

@@ -43,7 +43,9 @@ def run(version: str):
         conn = connect()
         base = results[cid]
         try:
-            res = draft_letter(client, conn, cases[cid]["dispute"], model, DIRECTION)
+            # Stress test: the simulated reviewer overrides the admission guardrail so every letter is graded;
+            # summary() reports what the guardrail would have blocked.
+            res = draft_letter(client, conn, cases[cid]["dispute"], model, DIRECTION, override_admission=True)
             o = copy.deepcopy(base["output"])
             o["draft"] = res["draft"]
             o["review"].update(letter_status="on_demand", reviewer_direction=DIRECTION,
@@ -71,7 +73,14 @@ def summary(version: str) -> dict:
     conc = {c for c in ok if letter_check(outs[c]["output"]["draft"]["narrative"])["concession"]}
     fab = [c for c in ok if fabrication_check(outs[c]["output"], cases[c]["dispute"], outs[c]["trace"])["fabricated"]]
     passed = [c for c in judged if judge[c]["pass"] and c not in conc]
+    from src.agent.v1 import admission_warnings
+    blocked = {c for c in ok if admission_warnings(outs[c]["output"]["review"]["text_facts"])}
+    rest = [c for c in judged if c not in blocked]
     s = {"letters": len(ok), "judged": len(judged), "pass_rate": round(len(passed) / len(judged), 4) if judged else None,
+         "guardrail_would_block": sorted(blocked),
+         "blocked_that_failed": sorted(blocked - set(passed)),
+         "pass_rate_after_guardrail": round(sum(c in passed for c in rest) / len(rest), 4) if rest else None,
+         "letters_after_guardrail": len(rest),
          "failed": sorted(set(judged) - set(passed)), "fact_check_flags": fab,
          "letter_cost_usd": round(sum(outs[c]["usage"].get("cost_usd", 0) for c in ok), 4)}
     (d / "summary.json").write_text(json.dumps(s, indent=1))

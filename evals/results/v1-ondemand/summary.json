@@ -2,6 +2,32 @@
  "letters": 50,
  "judged": 50,
  "pass_rate": 0.68,
+ "guardrail_would_block": [
+  "GEN-026",
+  "GEN-028",
+  "GEN-030",
+  "GEN-032",
+  "GEN-123",
+  "GEN-124",
+  "GEN-125",
+  "GEN-126",
+  "GEN-127",
+  "GEN-128",
+  "GEN-129",
+  "GEN-130"
+ ],
+ "blocked_that_failed": [
+  "GEN-026",
+  "GEN-028",
+  "GEN-030",
+  "GEN-032",
+  "GEN-126",
+  "GEN-127",
+  "GEN-128",
+  "GEN-129"
+ ],
+ "pass_rate_after_guardrail": 0.7895,
+ "letters_after_guardrail": 38,
  "failed": [
   "GEN-026",
   "GEN-028",

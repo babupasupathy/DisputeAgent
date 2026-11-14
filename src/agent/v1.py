@@ -117,12 +117,27 @@ def _brief(d: dict, rec: dict, dec, facts: dict) -> dict:
         "evidence_on_file": [f"{x['evidence_id']}: {x['basis']}" for x in dec.findings if x["status"] == "present"],
         "amount": d["amount"], "hours_remaining": dec.hours_remaining,
         "p_win": dec.p_win, "expected_value": dec.expected_value,
+        "warnings": admission_warnings(facts),
         "options": ["accept the dispute", "contest: call draft_letter() with your direction"],
     }
 
 
-def draft_letter(client, conn, dispute: dict, model: str, reviewer_direction: str) -> dict:
-    """On-demand letter for a brief-only escalation the reviewer decided to contest."""
+ADMISSIONS = {"merchant_ack_nondelivery": "acknowledged that the package was not delivered",
+              "merchant_admitted_defect": "admitted the item was defective or not as described"}
+
+
+def admission_warnings(facts: dict) -> list[str]:
+    """Guardrail (2026-11-14): a contest letter would argue against the merchant's own statement. In the
+    on-demand eval, these cases made up most failing letters; a reviewer should normally accept them."""
+    return [f"The merchant's own agent {why} ({facts[k]['message_id']}: \"{facts[k]['quote']}\"). A contest letter "
+            f"would argue against that statement; accepting is usually right."
+            for k, why in ADMISSIONS.items() if (facts.get(k) or {}).get("present")]
+
+
+def draft_letter(client, conn, dispute: dict, model: str, reviewer_direction: str,
+                 override_admission: bool = False) -> dict:
+    """On-demand letter for a brief-only escalation the reviewer decided to contest. If the merchant's own
+    agent admitted the fault, no letter is drafted unless the reviewer explicitly overrides."""
     usage = Usage()
     trace = full_context(conn, dispute)
     rec = {t["tool"]: t["output"] for t in trace}
@@ -133,8 +148,13 @@ def draft_letter(client, conn, dispute: dict, model: str, reviewer_direction: st
     facts, _ = _verify(read.get("facts") or {}, messages)
     rule = lookup(d["network"], d["reason_code"], read["category"])
     dec = decide(rec, rule, facts)
+    warnings = admission_warnings(facts)
+    if warnings and not override_admission:
+        return {"blocked": True, "warnings": warnings, "draft": None, "reviewer_notes": [], "trace": trace,
+                "usage": usage.to_dict(), "decision": dec}
     w = _write(client, model, usage, _fact_sheet(d, rule, dec, facts), rec, reviewer_direction)
-    return {"draft": {"narrative": w["narrative"], "evidence_list": w["evidence_list"]},
+    return {"blocked": False, "warnings": warnings,
+            "draft": {"narrative": w["narrative"], "evidence_list": w["evidence_list"]},
             "reviewer_notes": w["reviewer_notes"], "trace": trace, "usage": usage.to_dict(), "decision": dec}
 
 

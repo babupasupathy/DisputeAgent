@@ -1,106 +1,96 @@
 import pandas as pd
 import streamlit as st
 
-from data import outputs, per_case, scores
+from data import per_case, scores
 
-st.title("V0 baseline results")
-st.caption("One Sonnet 5.5 call per dispute with every record in the prompt. 162 synthetic cases, run 9 November 2026.")
+st.title("Results")
+st.caption("Every version runs on the same 162 synthetic disputes and is scored the same way. "
+           "Letters are graded by a calibrated Opus 5.5 judge.")
 
-s = scores("v0")
-if not s:
-    st.warning("No scored results found in evals/results/v0.")
-    st.stop()
-d, ev, esc, fab, dq, cl = (s["decision"], s["evidence"], s["escalation"], s["fabrication"],
-                           s["draft_quality"], s["cost_latency"])
+VERSIONS = {"V0 baseline": "v0", "V0 + account-age fix": "v0-agefix", "V1": "v1"}
+S = {k: scores(v) for k, v in VERSIONS.items()}
 
-c = st.columns(4)
-c[0].metric("Decision accuracy", f"{d['accuracy']:.1%}")
-c[1].metric("Wrongful auto-accepts", f"{d['wrongful_auto_accepts']}", f"${d['wrongful_auto_accept_usd']:,.0f}", delta_color="inverse", delta_arrow="off")
-c[2].metric("Escalation precision / recall", f"{esc['precision']:.0%} / {esc['recall']:.0%}")
-c[3].metric("Total run cost", f"${cl['total_usd']:.2f}", f"${cl['mean_usd_per_case']:.3f} per case", delta_color="off", delta_arrow="off")
 
-st.subheader("Decisions: expected vs what V0 chose")
-rows = []
-for k, v in d["confusion_expected_x_predicted"].items():
-    exp, pred = k.split("->")
-    rows.append({"Correct answer": exp, "V0 chose": pred, "n": v})
-cm = (pd.DataFrame(rows).pivot_table(index="Correct answer", columns="V0 chose", values="n", fill_value=0)
-      .reindex(index=["fight", "escalate", "accept"], columns=["fight", "escalate", "accept"], fill_value=0)
-      .astype(int))
-left, right = st.columns([3, 2])
-with left:
-    st.dataframe(cm.style.background_gradient(cmap="Blues", axis=None), width="stretch")
-    st.caption("Diagonal = correct. Read each row: of the 51 cases that should be fought, V0 fought 30 and escalated 20.")
-with right:
-    st.markdown("**Accuracy by dispute category**")
-    bc = pd.DataFrame({"category": list(d["by_category"]), "accuracy": list(d["by_category"].values())})
-    bc["category"] = bc["category"].str.replace("_", " ")
-    st.bar_chart(bc, x="category", y="accuracy", horizontal=True, y_label="", x_label="decision accuracy")
+def row(name, f):
+    return {"": name, **{k: f(s) for k, s in S.items()}}
 
-st.subheader("What went wrong, and why it matters")
+
+tbl = pd.DataFrame([
+    row("Decision accuracy", lambda s: f"{s['decision']['accuracy']:.1%}"),
+    row("Wrongful auto-accepts", lambda s: f"{s['decision']['wrongful_auto_accepts']} (${s['decision']['wrongful_auto_accept_usd']:,.0f})"),
+    row("Winnable cases escalated", lambda s: str(s['decision']['confusion_expected_x_predicted'].get('fight->escalate', 0))),
+    row("Escalation precision / recall", lambda s: f"{s['escalation']['precision']:.0%} / {s['escalation']['recall']:.0%}"),
+    row("Required evidence exactly right", lambda s: f"{s['evidence']['required_exact_rate']:.1%}"),
+    row("Letters passing the judge", lambda s: f"{s['draft_quality']['pass_rate']:.1%} of {s['draft_quality']['n_judged']}"),
+    row("Letters flagged by the fact checker", lambda s: str(s['fabrication']['drafts_with_unsupported_tokens'])),
+    row("Letters with internal field names", lambda s: str(s['letter'].get('with_field_names', '–'))),
+    row("Cost per case", lambda s: f"${s['cost_latency']['mean_usd_per_case']:.4f}"),
+    row("Latency p50 / p95", lambda s: f"{s['cost_latency']['latency_p50_s']:.1f} / {s['cost_latency']['latency_p95_s']:.1f} s"),
+])
+st.dataframe(tbl, hide_index=True, width="stretch")
+st.caption("V1 letters: 76 drafted up front pass 89.5% as judged; 5 of the 8 failures are verified judge false "
+           "failures on a true sentence ('placed 120 to 365 days before this order'), so 96.1% after correction. "
+           "50 conflict / missing-evidence escalations get a reviewer brief instead of a letter. "
+           "Field names were only counted from V1 on (–).")
+
+st.subheader("What each step fixed")
 st.markdown(
-    f"""
-1. **Escalating winnable cases (20 of 51).** V0 has no rules table, so it treats optional evidence
-   (signature or photo proof of delivery) as required, finds it "missing", and escalates. Its required-evidence
-   list was exactly right in only **{ev['required_exact_rate']:.0%}** of cases. Cost: reviewer time on cases that needed none.
-2. **Accepting cases that needed a person (13).** All 13 are disputes with conflicting records. Under the
-   policy, conflicts go to a human; V0 accepted them instead, giving up money with no review. This is the
-   error to drive down first.
-3. **Letters: one data bug causes most failures.** The calibrated judge passes **{dq['pass_rate']:.0%}** of
-   {dq['n_judged']} letters. 35 of the failures come from a single tool problem: customer history reports account age
-   on the day the records were pulled, and the agent presents it as age at order time. Fixing the tool, not the
-   prompt, is the first change for V1 (estimated pass rate about 92% once fixed).
+    """
+| Step | Change | Effect |
+|---|---|---|
+| **V0** | One model call, every record pasted in | 76% decisions; 20 winnable cases escalated; 14 wrongful auto-accepts ($5,377) |
+| **Account-age fix** | The tool reports age at order time instead of today; same agent, same prompt | Letters 62% → 92%; account-age failures 38 → 0; decisions unchanged |
+| **V1** | Decisions in code; the model reads text and writes letters; brief now, letter later | Decisions 100%; 0 wrongful auto-accepts; cost −52%; p50 latency 10.6 s → 2.6 s |
 """
 )
 
-st.subheader("Evidence and letters")
-c = st.columns(4)
-c[0].metric("Required list exactly right", f"{ev['required_exact_rate']:.1%}")
-c[1].metric("Real evidence marked missing", f"{ev['false_missing_rate']:.1%}")
-c[2].metric("Evidence claimed but absent", f"{ev['false_present_rate']:.1%}")
-c[3].metric("Letters passing judge", f"{dq['pass_rate']:.0%}",
-            "calibrated" if dq.get("judge_calibrated") else "uncalibrated", delta_color="off", delta_arrow="off")
-ms = dq["mean_scores"]
-st.caption("Judge mean scores (1–5): " + " · ".join(f"{k.replace('_', ' ')} {v:.2f}" for k, v in ms.items()))
+st.subheader("Decisions: correct answer vs what each version chose")
+pick = st.radio("Version", list(VERSIONS), horizontal=True, index=0)
+d = S[pick]["decision"]
+rows = [{"Correct answer": k.split("->")[0], "Chose": k.split("->")[1], "n": v}
+        for k, v in d["confusion_expected_x_predicted"].items()]
+cm = (pd.DataFrame(rows).pivot_table(index="Correct answer", columns="Chose", values="n", fill_value=0)
+      .reindex(index=["fight", "escalate", "accept"], columns=["fight", "escalate", "accept"], fill_value=0).astype(int))
+left, right = st.columns([3, 2])
+with left:
+    st.dataframe(cm.style.background_gradient(cmap="Blues", axis=None), width="stretch")
+    st.caption("Diagonal = correct.")
+with right:
+    bc = pd.DataFrame({"category": [k.replace("_", " ") for k in d["by_category"]],
+                       "accuracy": list(d["by_category"].values())})
+    st.bar_chart(bc, x="category", y="accuracy", horizontal=True, y_label="", x_label="decision accuracy")
 
 st.subheader("How the letter judge was calibrated")
 st.markdown(
     """
-An LLM judge (Opus 5.5) grades every letter. Before trusting it, I graded 40 letters blind myself, then settled
-every disagreement with the judge's reasoning and the records side by side.
+An LLM judge grades every letter. Before trusting it, the project owner graded letters blind, then settled every
+disagreement with the judge's reasoning and the records side by side.
+
+**Round 1: 40 V0 letters.**
 
 | Grader vs 40 settled labels | Agreement | Kappa | Bad letters passed | Good letters failed |
 |---|---|---|---|---|
-| My first-pass grades | 65% | 0.04 | 13 | 1 |
+| Owner, first pass | 65% | 0.04 | 13 | 1 |
 | Original judge: any unsupported claim fails | 70% | 0.42 | 2 | 10 |
 | **Final judge: material errors only, plus a code check for concessions** | **87.5%** | **0.73** | **2** | **3** |
 
-- **Unaided review misses contradictions.** Checking claims one at a time, I passed 13 letters that contradict the
-  records or invent facts (for example an invented "pending internal review").
-- **The original judge was too strict.** It failed letters over wording such as "accepted the return policy *at checkout*".
-- **The fix was product rules, not prompt tweaks:** what counts as a material error (contradiction, invented fact,
-  wrong number, conceding the dispute), written into the rubric, with clear-cut rules moved into code.
-- **Stable:** two identical runs agreed on all 40 letters. The rubric is now frozen; fresh V1 letters graded blind are the next test.
+**Round 2: 20 fresh V1 letters the rubric was never tuned on.** Agreement 14 of 20; the judge failed no good letter.
+All 6 misses had one cause: letters claimed delivery to the order's address while the delivery scan was in another
+city. The judge trusted the carrier's match flag and never checked it against the scan location.
 
-Caveat: the rubric was refined on these same 40 letters, so 0.73 is optimistic.
+**What human grading found that no automated check did:**
+- **Account age** measured on the wrong date (fixed in the tool)
+- **Notes to the reviewer** inside the issuer letter (V1 keeps them in a separate field)
+- **Delivery scans** in a different city from a "matched" address, in 112 of 131 deliveries (a synthetic-data bug, fixed at the source)
+
+Caveat: the rubric was refined on round 1's letters; round 2 is the cleaner test.
 """
 )
-c = st.columns(3)
-c[0].metric("Letters with a note to the reviewer", f"{s['letter']['with_reviewer_note']}", "allowed: every draft is reviewed",
-            delta_color="off", delta_arrow="off")
-c[1].metric("Letters conceding the dispute", f"{s['letter']['with_concession']}", "fails automatically",
-            delta_color="off", delta_arrow="off")
-c[2].metric("Account age at the wrong date", "35 letters", "fail on this alone", delta_color="off", delta_arrow="off")
 
-st.subheader("Cost and speed")
-pc, outs = per_case("v0"), outputs("v0")
-lat = pd.DataFrame([{"case": k, "latency_s": v["usage"]["latency_s"], "cost_usd": v["usage"]["cost_usd"]}
+st.subheader("Cost and speed (V1)")
+pc = per_case("v1")
+lat = pd.DataFrame([{"case": k, "latency_s": v["usage"].get("latency_s", 0), "cost_usd": v["usage"].get("cost_usd", 0)}
                     for k, v in pc.items()])
-c = st.columns(4)
-c[0].metric("Typical latency", f"{cl['latency_p50_s']:.1f} s")
-c[1].metric("95th percentile", f"{cl['latency_p95_s']:.1f} s")
-c[2].metric("Avg output tokens", f"{cl['mean_output_tokens']:,}")
-c[3].metric("Model served", ", ".join(cl["served_models"]))
 st.scatter_chart(lat, x="latency_s", y="cost_usd", x_label="latency (s)", y_label="cost (USD)")
-st.caption("Output tokens (including the model's reasoning) are about three quarters of the cost per case. "
-           "Grading 115 letters with Opus costs about $4 per run, about the same as running the agent.")
+st.caption("Bottom-left: accepts and brief-only escalations (no letter, often no model call). "
+           "Upper-right: cases with a letter. Grading 76 letters with Opus costs about $2.70 per run.")

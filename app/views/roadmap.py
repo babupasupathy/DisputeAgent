@@ -16,16 +16,21 @@ st.markdown(
     "61.7% → 91.5%, account-age failures 38 → 0, decisions unchanged. Same agent, same prompt."
 )
 
+st.markdown(
+    "- **V1 built and measured.** Decisions in code, the model reads text and writes letters, brief now letter later: "
+    "decisions 100%, 0 wrongful auto-accepts, cost −52%, letters drafted up front 96% after verified judge corrections.\n"
+    "- **Judge checked blind on 20 fresh V1 letters:** 14/20 agree, no good letter failed; all 6 misses traced to a "
+    "synthetic-data bug (delivery scan city), fixed at the source."
+)
+
 st.subheader("Next")
 st.markdown(
     "| Step | What changes | Prediction to test |\n|---|---|---|\n"
-    "| **V1: decision layer to code** | Rules table, evidence field checks, P(win), EV and the 7 rules run as code. The model reads text and writes the letter. | Winnable cases escalated drop from 20 to under 5; wrongful auto-accepts from 14 to under 3; cost per case roughly halves |\n"
-    "| **Text-reading labels** | Hand-written, messy support messages with human labels for the text-based evidence | Becomes the real test once decisions are code; target 95% agreement |\n"
-    "| **Smaller model for reading** | Haiku 5.5 reads issuer notes and support messages | Keeps accuracy within 2 points of Sonnet at a fraction of the cost |\n"
-    "| **Judge calibration** | 40 letters graded by hand, compared to the Opus judge | Agreement (Cohen's kappa) above 0.6 before judge scores are trusted |\n"
-    "| **V2: learn from outcomes** | P(win) fit on human-reviewed outcomes; reviewed past cases retrieved as examples | Better-calibrated P(win) changes fewer than 10% of decisions |\n"
-    "| **V3: critic step** | A second pass checks each letter against the reason code's requirements before review | Judge pass rate up; kept only if the gain is measurable |\n"
-    "| **Reviewer screen** | Shows why a case was escalated, what is missing and a ready letter; records every override | Review time under 2 minutes; override rate becomes a headline metric |\n"
+    "| **Messy messages for the reader** | Hand-written, realistic support messages (typos, sarcasm, reversals) labelled by the owner | The reader keeps ≥ 95% agreement on the four text facts; decisions are only as good as this step now |\n"
+    "| **Admission guardrail** | Before drafting an on-demand letter, warn when the merchant's own agent admitted the fault | Blocks most of the on-demand letters that fail today |\n"
+    "| **Smaller model for reading** | Haiku 5.5 reads issuer notes and support messages | Keeps reading accuracy within 2 points of Sonnet at a fraction of the cost |\n"
+    "| **V2: learn from outcomes** | P(win) fit on human-reviewed outcomes | Better-calibrated P(win) changes fewer than 10% of decisions |\n"
+    "| **Reviewer screen** | Shows the brief, a ready letter, and records every override | Review time under 2 minutes; override rate becomes a headline metric |\n"
     "| **Auto-submit, maybe** | Low-risk fight cases skip review | Only if measured accuracy clears a bar set in advance |"
 )
 
