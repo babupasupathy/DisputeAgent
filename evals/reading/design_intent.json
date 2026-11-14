@@ -1,0 +1,212 @@
+{
+ "MSY-01": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-02": {
+  "category": "item_not_received",
+  "customer_ack_receipt": true,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-03": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-04": {
+  "category": "not_as_described",
+  "customer_ack_receipt": true,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-05": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-06": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": true,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-07": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-08": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-09": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": true,
+  "merchant_admitted_defect": false
+ },
+ "MSY-10": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-11": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": true
+ },
+ "MSY-12": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-13": {
+  "category": "item_not_received",
+  "customer_ack_receipt": true,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-14": {
+  "category": "item_not_received",
+  "customer_ack_receipt": true,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-15": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": true,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-16": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-17": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-18": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-19": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-20": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": true
+ },
+ "MSY-21": {
+  "category": "not_as_described",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-22": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-23": {
+  "category": "not_as_described",
+  "customer_ack_receipt": true,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-24": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-25": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-26": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-27": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-28": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": false,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ },
+ "MSY-29": {
+  "category": "item_not_received",
+  "customer_ack_receipt": false,
+  "merchant_offered_remedy": true,
+  "merchant_ack_nondelivery": true,
+  "merchant_admitted_defect": false
+ },
+ "MSY-30": {
+  "category": "not_as_described",
+  "customer_ack_receipt": true,
+  "merchant_offered_remedy": true,
+  "merchant_ack_nondelivery": false,
+  "merchant_admitted_defect": false
+ }
+}
