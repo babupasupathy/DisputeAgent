@@ -102,6 +102,7 @@ def aggregate(cases: list[dict], results: dict[str, dict], judge: dict[str, dict
     lt = [s.get("letter") or {} for s in ok]
     letter = {"with_reviewer_note": sum(bool(x.get("reviewer_note")) for x in lt),
               "with_concession": sum(bool(x.get("concession")) for x in lt),
+              "with_field_names": sum(bool(x.get("field_names")) for x in lt),
               "concession_cases": [s["case_id"] for s in ok if (s.get("letter") or {}).get("concession")]}
 
     fab = [s["fabrication"] for s in ok]
@@ -176,7 +177,8 @@ def headline(s: dict) -> list[tuple[str, object]]:
         ("escalation recall", s["escalation"]["recall"]),
         ("escalation rate (pred / expected)", f"{s['escalation']['predicted_rate']} / {s['escalation']['expected_rate']}"),
         ("drafts with unsupported tokens", f"{s['fabrication']['drafts_with_unsupported_tokens']} ({s['fabrication']['rate']})"),
-        ("letters with a reviewer note / a concession", f"{s['letter']['with_reviewer_note']} / {s['letter']['with_concession']}"),
+        ("letters with a reviewer note / a concession / field names",
+         f"{s['letter']['with_reviewer_note']} / {s['letter']['with_concession']} / {s['letter'].get('with_field_names', 0)}"),
         ("draft quality pass rate (judge " + ("calibrated, kappa 0.73" if s["draft_quality"].get("judge_calibrated") else "uncalibrated") + ")",
          s["draft_quality"].get("pass_rate", "not judged")),
         ("cost per case (USD)", s["cost_latency"]["mean_usd_per_case"]),

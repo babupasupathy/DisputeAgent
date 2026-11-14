@@ -21,7 +21,7 @@ Synthetic data. Labels are rule-derived (see docs/data.md).
 | escalation recall | 1.0 |
 | escalation rate (pred / expected) | 0.463 / 0.463 |
 | drafts with unsupported tokens | 0 (0.0) |
-| letters with a reviewer note / a concession | 0 / 0 |
+| letters with a reviewer note / a concession / field names | 0 / 0 / 26 |
 | draft quality pass rate (judge calibrated, kappa 0.73) | 0.9737 |
 | cost per case (USD) | 0.01126 |
 | total cost (USD) | 1.8245 |

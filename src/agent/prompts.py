@@ -117,6 +117,10 @@ delivered or complete.
 state the refund (amount, date, refund ID) first and explain that the cardholder has already been credited.
 - Do not mention evidence that is missing, internal processes, reviews, or doubts, and never concede or \
 recommend accepting the dispute. The letter argues the merchant's case from what is on file.
+- Write for a person at the card issuer, in plain English. Never use internal field names or code-style terms \
+(for example delivered_address_match, signature_on_file, customer_account_age_days_at_order, avs_result) and \
+never quote raw device IDs or IP tokens: say "the same device and network (IP) as order ORD-...". Write dates \
+as YYYY-MM-DD; add a time only when it matters.
 - Keep personal and payment data masked exactly as in the records.
 - Professional, concise, factual. End by asking the issuer to resolve the dispute in the merchant's favor.
 

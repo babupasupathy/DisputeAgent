@@ -140,4 +140,6 @@ def test_letter_checks_flag_concessions_not_gap_notes():
     plain = "The carrier confirmed delivery. The customer acknowledged receipt by email."
     assert check(gap)["reviewer_note"] and not check(gap)["concession"]
     assert check(conc)["reviewer_note"] and check(conc)["concession"]
-    assert check(plain) == {"reviewer_note": False, "concession": False, "notes": [], "concessions": []}
+    assert check(plain) == {"reviewer_note": False, "concession": False, "notes": [], "concessions": [], "field_names": []}
+    leak = check("The carrier shows delivered_address_match = True; device dev_045ed4ea5a4b matched ORD-100742.")
+    assert leak["field_names"] == ["delivered_address_match", "dev_045ed4ea5a4b"]

@@ -21,6 +21,10 @@ CONCESSION = re.compile(
     r"|not worth (contesting|fighting))\b", re.I)
 
 
+# Internal field names (snake_case) and raw device / IP tokens do not belong in an issuer letter.
+FIELD_NAME = re.compile(r"\b(?:[a-z]+(?:_[a-z0-9]+)+|dev_[0-9a-f]{6,}|ip_[0-9a-f]{6,})\b")
+
+
 def _sentences(text: str, pattern: re.Pattern) -> list[str]:
     return [s.strip() for s in _SENT.findall(text or "") if pattern.search(s)]
 
@@ -28,4 +32,6 @@ def _sentences(text: str, pattern: re.Pattern) -> list[str]:
 def check(narrative: str) -> dict:
     notes = _sentences(narrative, REVIEWER_NOTE)
     conc = _sentences(narrative, CONCESSION)
-    return {"reviewer_note": bool(notes), "concession": bool(conc), "notes": notes, "concessions": conc}
+    fields = sorted(set(FIELD_NAME.findall(narrative or "")))
+    return {"reviewer_note": bool(notes), "concession": bool(conc), "notes": notes, "concessions": conc,
+            "field_names": fields}

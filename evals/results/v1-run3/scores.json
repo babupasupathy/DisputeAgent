@@ -46,6 +46,7 @@
  "letter": {
   "with_reviewer_note": 0,
   "with_concession": 0,
+  "with_field_names": 26,
   "concession_cases": []
  },
  "draft_quality": {

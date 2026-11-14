@@ -75,23 +75,42 @@ def evidence(rec: dict, facts: dict[str, dict]) -> tuple[dict[str, bool], dict[s
     }
     q = lambda k: (facts.get(k) or {}).get("quote") or ""
     mid = lambda k: (facts.get(k) or {}).get("message_id") or ""
+    # Plain-language basis lines: the letter writer copies these, so no internal field names
+    # (field names leaked into 26 of 112 V1 letters; owner graded it a format defect, 2026-11-14).
+    yn = lambda b, yes, no: yes if b else no
+    am = sh.get("delivered_address_match")
     basis = {
-        "carrier_tracking": f"tracking number {sh.get('tracking_number')} ({sh.get('carrier')})" if shipped else "no tracking number",
-        "delivery_confirmation": f"carrier status {sh.get('status')}, delivered_at {sh.get('delivered_at')}",
-        "address_match": f"delivered_address_match = {sh.get('delivered_address_match')}",
-        "proof_of_delivery": f"signature_on_file = {sh.get('signature_on_file')}, photo_on_file = {sh.get('photo_on_file')}",
-        "customer_ack_receipt": f"{mid('customer_ack_receipt')}: \"{q('customer_ack_receipt')}\"" if ev["customer_ack_receipt"] else "no customer message acknowledging receipt",
-        "avs_cvv_match": f"avs_result {pay['avs_result']}, cvv_result {pay['cvv_result']}",
-        "delivered_to_billing_address": f"shipping_matches_billing = {o['shipping_matches_billing']}, delivered = {delivered}",
-        "prior_undisputed_orders": f"{len(in_window)} undisputed delivered orders 120-365 days before this order"
+        "carrier_tracking": f"{sh.get('carrier')} tracking number {sh.get('tracking_number')}" if shipped else "no tracking number",
+        "delivery_confirmation": f"the carrier recorded the package as delivered on {(sh.get('delivered_at') or '')[:10]}"
+                                 if delivered else f"the carrier has not recorded a delivery (status: {sh.get('status')})",
+        "address_match": {True: "the carrier confirmed delivery to the order's shipping address",
+                          False: "the carrier reported delivery to a different address than the order's shipping address",
+                          None: "the carrier did not confirm which address the package was delivered to"}[am],
+        "proof_of_delivery": yn(sh.get("signature_on_file"), "the carrier has a recipient signature on file",
+                                yn(sh.get("photo_on_file"), "the carrier has a delivery photo on file",
+                                   "no signature or delivery photo is on file")),
+        "customer_ack_receipt": f"in message {mid('customer_ack_receipt')} the customer wrote: \"{q('customer_ack_receipt')}\""
+                                if ev["customer_ack_receipt"] else "no customer message acknowledging receipt",
+        "avs_cvv_match": yn(ev["avs_cvv_match"], "the address check (AVS) and card security code check (CVV) both matched",
+                            f"the address check (AVS) result was {pay['avs_result']} and the card security code check (CVV) "
+                            f"result was {pay['cvv_result']}, so they did not both match"),
+        "delivered_to_billing_address": yn(ev["delivered_to_billing_address"],
+                                           "the order was shipped to the billing address and delivered",
+                                           "the order was not delivered to the billing address"),
+        "prior_undisputed_orders": f"{len(in_window)} earlier delivered, undisputed order(s) placed 120 to 365 days before this order"
                                    + (f": {', '.join(p['order_id'] for p in in_window)}" if in_window else ""),
-        "device_ip_match": f"same device and IP as undisputed order {dev_ip[0]['order_id']}" if dev_ip else "no undisputed earlier order with the same device and IP",
-        "established_account": f"account {age} days old when this order was placed (customer_account_age_days_at_order)",
-        "product_listing": "archived listing snapshot on file" if ev["product_listing"] else "no archived listing snapshot",
-        "return_policy_accepted": f"return policy accepted: {o['return_policy_accepted']}",
-        "merchant_offered_remedy": f"{mid('merchant_offered_remedy')}: \"{q('merchant_offered_remedy')}\"" if ev["merchant_offered_remedy"] else "no merchant offer of a remedy in the support log",
-        "no_return_attempted": "no return requested or received" if not rf["returns"] else f"{len(rf['returns'])} return(s) on file",
-        "dispatch_photo": f"dispatch_photo_on_file = {sh.get('dispatch_photo_on_file')}",
+        "device_ip_match": f"this order came from the same device and network (IP) as earlier undisputed order {dev_ip[0]['order_id']}"
+                           if dev_ip else "no earlier undisputed order from the same device and network",
+        "established_account": f"the customer's account was {age} days old when this order was placed",
+        "product_listing": yn(ev["product_listing"], "an archived copy of the product listing is on file",
+                              "no archived copy of the product listing is on file"),
+        "return_policy_accepted": f"the customer accepted return policy {o['return_policy_accepted']}"
+                                  if o["return_policy_accepted"] else "no accepted return policy is recorded",
+        "merchant_offered_remedy": f"in message {mid('merchant_offered_remedy')} the merchant's agent wrote: \"{q('merchant_offered_remedy')}\""
+                                   if ev["merchant_offered_remedy"] else "no offer of a return, refund or replacement in the support log",
+        "no_return_attempted": "no return has been requested or received" if not rf["returns"]
+                               else f"{len(rf['returns'])} return(s) on file",
+        "dispatch_photo": yn(ev["dispatch_photo"], "a photo taken at dispatch is on file", "no dispatch photo is on file"),
     }
     return ev, basis
 
