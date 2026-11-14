@@ -1,0 +1,11 @@
+id,field,value,reason
+MSY-21,customer_ack_receipt,0,"Owner ruling 2026-11-14: the issuer's note alone does not count as the customer acknowledging receipt"
+MSY-07,merchant_offered_remedy,0,"Owner ruling 2026-11-14: quoting the return policy is not a remedy offer"
+MSY-09,merchant_admitted_defect,0,"Owner ruling 2026-11-14: lost in transit is a non-delivery admission, not a defect"
+MSY-06,merchant_admitted_defect,0,"Owner ruling 2026-11-14: apology + remedy is a soft signal, not an admission (explicit standard)"
+MSY-07,merchant_admitted_defect,0,"Owner ruling 2026-11-14: explicit standard for defect admissions"
+MSY-15,merchant_admitted_defect,0,"Owner ruling 2026-11-14: explicit standard for defect admissions"
+MSY-16,merchant_admitted_defect,0,"Owner ruling 2026-11-14: explicit standard for defect admissions"
+MSY-17,merchant_admitted_defect,0,"Owner ruling 2026-11-14: explicit standard for defect admissions"
+MSY-18,merchant_admitted_defect,0,"Owner ruling 2026-11-14: explicit standard for defect admissions"
+MSY-30,merchant_admitted_defect,0,"Owner ruling 2026-11-14: apology + remedy is a soft signal, not an admission (explicit standard)"

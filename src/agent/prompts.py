@@ -64,17 +64,30 @@ handled by code, so report only what the text says.
    - fraud: the cardholder says they did not make or authorize the purchase
    If only one candidate is given, return it.
 
-2. Four facts. For each, say whether a support message clearly states it, and if so give that message's \
-message_id and an exact quote (copied character for character from the message body) that shows it.
-   - customer_ack_receipt: the CUSTOMER says the package or item arrived / was received.
-   - merchant_offered_remedy: the MERCHANT'S AGENT offers a return, refund, replacement or exchange.
-   - merchant_ack_nondelivery: the MERCHANT'S AGENT acknowledges the package was lost, not delivered or \
-went missing.
-   - merchant_admitted_defect: the MERCHANT'S AGENT admits the item was defective, faulty or not as described.
-   Messages from "system" are automated notifications and never count. Expectation or worry is not \
-acknowledgement ("I'm still waiting", "tracking says delivered but..."). When unsure, answer false.
+2. Facts. For each, say whether the thread clearly shows it, and if so give that message's message_id and an \
+exact quote (copied character for character from the message body) that shows it. Definitions (owner rulings, \
+2026-11-14):
+   - customer_ack_receipt: the CUSTOMER says the item arrived or was received, OR complains about the item they \
+have (its condition, size, colour, material, that it broke, or that they sent it back): you can only complain \
+about an item you received. Quote that message. The issuer's note alone never counts.
+   - merchant_offered_remedy: the MERCHANT'S AGENT offers a return, refund, replacement, exchange or store \
+credit; OR an automated (system) message says a refund was processed; OR the CUSTOMER says they returned it. \
+Merely quoting the return policy is not an offer.
+   - merchant_ack_nondelivery: the MERCHANT'S AGENT acknowledges the package was lost, not delivered or went \
+missing.
+   - merchant_admitted_defect: the MERCHANT'S AGENT explicitly admits the item was defective, faulty, \
+mislabeled or not as described. An apology or a remedy offer alone is NOT an admission.
+   - merchant_apologized_for_item: the MERCHANT'S AGENT apologizes for or regrets the item's condition or says \
+it should not have happened ("Sorry about that", "That shouldn't happen"). A soft signal for the reviewer only.
+   Expectation or worry is not acknowledgement ("I'm still waiting", "tracking says delivered but..."). When \
+unsure, answer false.
 
 Return only the JSON object described by the output schema."""
+
+
+# The four decision facts plus a soft signal the reviewer sees but the decision ignores.
+READER_FACTS = ["customer_ack_receipt", "merchant_offered_remedy", "merchant_ack_nondelivery",
+                "merchant_admitted_defect", "merchant_apologized_for_item"]
 
 
 def v1_reader_schema(candidates: list[str]) -> dict:
@@ -86,10 +99,8 @@ def v1_reader_schema(candidates: list[str]) -> dict:
                 "category": {"type": "string", "enum": candidates},
                 "category_rationale": {"type": "string"},
                 "facts": {"type": "object", "additionalProperties": False,
-                          "required": ["customer_ack_receipt", "merchant_offered_remedy",
-                                       "merchant_ack_nondelivery", "merchant_admitted_defect"],
-                          "properties": {k: fact for k in ["customer_ack_receipt", "merchant_offered_remedy",
-                                                           "merchant_ack_nondelivery", "merchant_admitted_defect"]}}}}
+                          "required": READER_FACTS,
+                          "properties": {k: fact for k in READER_FACTS}}}}
 
 
 def v1_writer_system() -> str:

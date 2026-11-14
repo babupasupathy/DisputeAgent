@@ -23,14 +23,15 @@ VERSION = "v1"
 def _verify(facts: dict, messages: list[dict]) -> tuple[dict, list[str]]:
     """Keep a fact only if its quote appears in the cited message from the right sender."""
     by_id = {m["message_id"]: m for m in messages}
-    want = {"customer_ack_receipt": "customer"}  # the other three must come from the merchant's agent
+    # Who may be quoted for each fact (owner rulings 2026-11-14); anything else must be the merchant's agent.
+    senders = {"customer_ack_receipt": {"customer"}, "merchant_offered_remedy": {"agent", "system", "customer"}}
     out, warnings = {}, []
-    for k in TEXT_FACTS:
+    for k in (*TEXT_FACTS, "merchant_apologized_for_item"):
         f = facts.get(k) or {}
         ok = False
         if f.get("present"):
             m = by_id.get(f.get("message_id", ""))
-            sender_ok = m is not None and m["sender"] == want.get(k, "agent")
+            sender_ok = m is not None and m["sender"] in senders.get(k, {"agent"})
             quote = (f.get("quote") or "").strip()
             ok = bool(m) and sender_ok and bool(quote) and quote in m["body"]
             if not ok:
@@ -118,6 +119,9 @@ def _brief(d: dict, rec: dict, dec, facts: dict) -> dict:
         "amount": d["amount"], "hours_remaining": dec.hours_remaining,
         "p_win": dec.p_win, "expected_value": dec.expected_value,
         "warnings": admission_warnings(facts),
+        "signals": ([f"The merchant's agent apologized for the item ({facts['merchant_apologized_for_item']['message_id']}: "
+                     f"\"{facts['merchant_apologized_for_item']['quote']}\"); not an admission, but check before contesting."]
+                    if (facts.get("merchant_apologized_for_item") or {}).get("present") else []),
         "options": ["accept the dispute", "contest: call draft_letter() with your direction"],
     }
 
@@ -175,6 +179,10 @@ def run_case(client, conn, dispute: dict, model: str) -> dict:
     dec = decide(rec, rule, facts)
 
     notes = list(warnings)
+    apo = facts.get("merchant_apologized_for_item") or {}
+    if apo.get("present"):  # soft signal (owner ruling 2026-11-14): shown to the reviewer, never decides
+        notes.append(f"The merchant's agent apologized for the item ({apo['message_id']}: \"{apo['quote']}\"). "
+                     "Not an admission, but check it before submitting.")
     letter_status, brief = "drafted", None
     if brief_only(dec):
         letter_status = "brief_only"

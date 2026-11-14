@@ -5,15 +5,15 @@
  },
  "customer_ack_receipt": {
   "n": 30,
-  "agreement": 0.7,
+  "agreement": 0.967,
   "false_positives": 0,
-  "false_negatives": 9
+  "false_negatives": 1
  },
  "merchant_offered_remedy": {
   "n": 30,
-  "agreement": 0.867,
+  "agreement": 1.0,
   "false_positives": 0,
-  "false_negatives": 4
+  "false_negatives": 0
  },
  "merchant_ack_nondelivery": {
   "n": 30,
@@ -23,237 +23,17 @@
  },
  "merchant_admitted_defect": {
   "n": 30,
-  "agreement": 0.733,
+  "agreement": 1.0,
   "false_positives": 0,
-  "false_negatives": 8
+  "false_negatives": 0
  },
- "all_fields_right": 0.633,
- "cost_usd": 0.0877,
+ "all_fields_right": 0.967,
+ "cost_usd": 0.104,
  "errors": 0,
  "misses": [
   {
-   "id": "MSY-06",
-   "field": "customer_ack_receipt",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-07",
-   "field": "customer_ack_receipt",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
    "id": "MSY-15",
    "field": "customer_ack_receipt",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-16",
-   "field": "customer_ack_receipt",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-17",
-   "field": "customer_ack_receipt",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-18",
-   "field": "customer_ack_receipt",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-19",
-   "field": "customer_ack_receipt",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-20",
-   "field": "customer_ack_receipt",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-21",
-   "field": "customer_ack_receipt",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-07",
-   "field": "merchant_offered_remedy",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-16",
-   "field": "merchant_offered_remedy",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-17",
-   "field": "merchant_offered_remedy",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-18",
-   "field": "merchant_offered_remedy",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-06",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-07",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-09",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-15",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-16",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-17",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-18",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "reader": {
-    "present": false,
-    "message_id": null,
-    "quote": null
-   },
-   "design_intent": false
-  },
-  {
-   "id": "MSY-30",
-   "field": "merchant_admitted_defect",
    "label": "1",
    "reader": {
     "present": false,
@@ -271,32 +51,8 @@
    "design_intent": false
   },
   {
-   "id": "MSY-06",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "design_intent": false
-  },
-  {
    "id": "MSY-07",
    "field": "customer_ack_receipt",
-   "label": "1",
-   "design_intent": false
-  },
-  {
-   "id": "MSY-07",
-   "field": "merchant_offered_remedy",
-   "label": "1",
-   "design_intent": false
-  },
-  {
-   "id": "MSY-07",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "design_intent": false
-  },
-  {
-   "id": "MSY-09",
-   "field": "merchant_admitted_defect",
    "label": "1",
    "design_intent": false
   },
@@ -319,12 +75,6 @@
    "design_intent": false
   },
   {
-   "id": "MSY-15",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "design_intent": false
-  },
-  {
    "id": "MSY-16",
    "field": "customer_ack_receipt",
    "label": "1",
@@ -333,12 +83,6 @@
   {
    "id": "MSY-16",
    "field": "merchant_offered_remedy",
-   "label": "1",
-   "design_intent": false
-  },
-  {
-   "id": "MSY-16",
-   "field": "merchant_admitted_defect",
    "label": "1",
    "design_intent": false
   },
@@ -355,12 +99,6 @@
    "design_intent": false
   },
   {
-   "id": "MSY-17",
-   "field": "merchant_admitted_defect",
-   "label": "1",
-   "design_intent": false
-  },
-  {
    "id": "MSY-18",
    "field": "customer_ack_receipt",
    "label": "1",
@@ -369,12 +107,6 @@
   {
    "id": "MSY-18",
    "field": "merchant_offered_remedy",
-   "label": "1",
-   "design_intent": false
-  },
-  {
-   "id": "MSY-18",
-   "field": "merchant_admitted_defect",
    "label": "1",
    "design_intent": false
   },
@@ -387,18 +119,6 @@
   {
    "id": "MSY-20",
    "field": "customer_ack_receipt",
-   "label": "1",
-   "design_intent": false
-  },
-  {
-   "id": "MSY-21",
-   "field": "customer_ack_receipt",
-   "label": "1",
-   "design_intent": false
-  },
-  {
-   "id": "MSY-30",
-   "field": "merchant_admitted_defect",
    "label": "1",
    "design_intent": false
   }

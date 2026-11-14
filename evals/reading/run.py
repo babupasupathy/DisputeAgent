@@ -52,7 +52,11 @@ def read(tag: str):
 
 def score(tag: str, labels: str = "labels.csv") -> dict:
     outs = {json.loads(l)["id"]: json.loads(l) for l in open(RESULTS_DIR / f"reading-{tag}" / "outputs.jsonl")}
-    gold = {r["id"]: r for r in csv.DictReader(open(HERE / labels))}
+    gold = {r["id"]: dict(r) for r in csv.DictReader(open(HERE / labels))}
+    rulings = HERE / "label_rulings.csv"  # owner rulings made after seeing disagreements; they take precedence
+    if rulings.exists():
+        for r in csv.DictReader(open(rulings)):
+            gold[r["id"]][r["field"]] = r["value"]
     intent = json.load(open(HERE / "design_intent.json"))
     res, misses = {}, []
     for k in ("category", *TEXT_FACTS):

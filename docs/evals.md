@@ -307,6 +307,31 @@ is still graded): the guardrail would block 12 of 50 cases, 8 of which were fail
 the letters it lets through is 78.9% (30/38), up from 68% overall. Two of the remaining 8 failures are the
 verified "120 to 365 days" judge false failures.
 
+### Reading step on messy, hand-written threads (2026-11-14)
+
+With decisions in code, V1 is only as good as its reading step. 30 hand-written threads
+(`evals/reading/messy_cases.jsonl`: typos, sarcasm, "nvm found it", Spanish, a neighbour holding the parcel,
+store credit, an automated refund notice, policy quotes vs offers, apologies vs admissions, Mastercard 4853
+category calls), labelled blind by the owner on a labeling page (`evals/reading/labels.csv`).
+
+First run (Sonnet 5.5, original definitions, `reading-sonnet-v1defs`): category 30/30, non-delivery 30/30,
+remedy 26/30, defect 22/30, receipt 21/30. The reader made no false positives: all 21 disagreements were the
+owner reading a fact as implied where the reader required it stated. Owner rulings (`label_rulings.csv`, prompt
+and quote checks updated):
+- **Receipt:** a customer complaining about the item they have counts (you can only complain about an item you
+  received); the issuer's note alone does not.
+- **Remedy:** store credit, an automated "refund processed" notice and a customer saying they sent it back count;
+  quoting the return policy does not.
+- **Defect admission stays explicit.** "Apology + remedy = admission" would have made the routine remedy message
+  ("Sorry to hear that! I can send a replacement…") an admission, so every not-as-described case with the remedy
+  evidence it needs would escalate and none could be fought. Instead an apology about the item is a soft signal
+  (`merchant_apologized_for_item`) shown to the reviewer in the brief and notes, with no effect on decisions.
+
+Second run, new definitions ($0.10): **every field right on 29 of 30 threads**; category, remedy, non-delivery
+and defect 30/30, receipt 29/30 (MSY-15, "I want my money back", which the owner read as implied receipt).
+Apology signal raised on MSY-06, MSY-20, MSY-30. Caveat: the definitions were refined on these 30 threads;
+the next V1 run on the 162 cases confirms the new definitions leave decisions unchanged.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a

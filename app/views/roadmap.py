@@ -20,14 +20,16 @@ st.markdown(
     "- **V1 built and measured.** Decisions in code, the model reads text and writes letters, brief now letter later: "
     "decisions 100%, 0 wrongful auto-accepts, cost −52%, letters drafted up front 96% after verified judge corrections.\n"
     "- **Judge checked blind on 20 fresh V1 letters:** 14/20 agree, no good letter failed; all 6 misses traced to a "
-    "synthetic-data bug (delivery scan city), fixed at the source."
+    "synthetic-data bug (delivery scan city), fixed at the source.\n"
+    "- **Reading step tested on 30 messy, hand-written threads** labelled blind by the owner: after three owner rulings on "
+    "what counts as implied, every field right on 29 of 30 threads; an apology about the item became a reviewer signal "
+    "rather than an admission, so remedy offers stay the merchant's defence."
 )
 
 st.subheader("Next")
 st.markdown(
     "| Step | What changes | Prediction to test |\n|---|---|---|\n"
-    "| **Messy messages for the reader** | Hand-written, realistic support messages (typos, sarcasm, reversals) labelled by the owner | The reader keeps ≥ 95% agreement on the four text facts; decisions are only as good as this step now |\n"
-    "| **Admission guardrail** | Before drafting an on-demand letter, warn when the merchant's own agent admitted the fault | Blocks most of the on-demand letters that fail today |\n"
+
     "| **Smaller model for reading** | Haiku 5.5 reads issuer notes and support messages | Keeps reading accuracy within 2 points of Sonnet at a fraction of the cost |\n"
     "| **V2: learn from outcomes** | P(win) fit on human-reviewed outcomes | Better-calibrated P(win) changes fewer than 10% of decisions |\n"
     "| **Reviewer screen** | Shows the brief, a ready letter, and records every override | Review time under 2 minutes; override rate becomes a headline metric |\n"
