@@ -2,6 +2,6 @@
  "n": 15,
  "pass_agreement": 0.867,
  "cohens_kappa": 0.0,
- "mean_abs_score_diff": 0.458,
+ "mean_abs_score_diff": 0.45,
  "judge_file": "judge.jsonl"
 }

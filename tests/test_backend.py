@@ -99,3 +99,17 @@ def test_account_age_is_measured_at_order_time(conn, committed_cases):
         assert "account_age_days" not in hist
         this = next(o for o in hist["orders"] if o["order_id"] == order["order_id"])
         assert this["account_age_days_at_order"] == age
+
+
+def test_delivery_scan_city_agrees_with_carrier_address_match(conn, committed_cases):
+    """Regression: the carrier said 'address matched' while the delivery scan was in another city
+    (112 of 131 deliveries). Found by the project owner during blind grading, 2026-11-14."""
+    import re
+    for case in committed_cases:
+        order = repo.get_order_details(conn, case["dispute"]["order_id"])
+        sh = repo.get_shipping_tracking(conn, case["dispute"]["order_id"])
+        if sh.get("status") != "delivered" or sh.get("delivered_address_match") is None:
+            continue
+        ship_city = re.search(r"St, ([^,]+, [A-Z]{2})", order["shipping_address"]).group(1)
+        scan_city = [e["location"] for e in sh["events"] if e["status"] == "delivered"][-1]
+        assert (scan_city == ship_city) == sh["delivered_address_match"], case["case_id"]

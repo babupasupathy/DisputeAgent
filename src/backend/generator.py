@@ -437,6 +437,15 @@ class Builder:
                     listing_snapshot_id=snap)
         return oid, total
 
+    def _city_of(self, order_id: str) -> tuple[str, str] | None:
+        row = self.conn.execute("SELECT shipping_address FROM orders WHERE order_id=?", (order_id,)).fetchone()
+        if row is None:
+            return None
+        for c in CITIES:
+            if f", {c[0]}, {c[1]} " in row[0]:
+                return c
+        return None
+
     def shipment(self, order_id: str, order_at: datetime, *, tracked=True, status="delivered",
                  address_match: bool | None = True, signature=False, photo=False,
                  dispatch_photo=False) -> datetime | None:
@@ -450,7 +459,14 @@ class Builder:
         delivered_at = None
         events: list[tuple[datetime, str, str, str]] = []
         if tracked:
-            city, st = self.rng.choice(CITIES)
+            city, st = self.rng.choice(CITIES)  # drawn as before, so every other generated value is unchanged
+            # Destination scans must agree with the carrier's address-match flag (bug found in human grading,
+            # 2026-11-14: 112 of 131 "matched" deliveries were scanned in another city).
+            ship_city = self._city_of(order_id)
+            if ship_city and status == "delivered" and address_match is True:
+                city, st = ship_city
+            elif ship_city and status == "delivered" and address_match is False and (city, st) == ship_city:
+                city, st = CITIES[(CITIES.index(ship_city) + 1) % len(CITIES)]
             events.append((shipped, "label_created", "Origin facility, NV", "Shipping label created"))
             t1 = shipped + timedelta(hours=self.rng.randint(8, 20))
             events.append((t1, "in_transit", "Regional hub, UT", "Departed facility"))
