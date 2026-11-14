@@ -9,6 +9,7 @@ from pathlib import Path
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(1, str(Path(__file__).resolve().parents[1]))  # repo root, for src.review_ui
 
 st.set_page_config(page_title="Dispute Agent", page_icon="⚖️", layout="wide")
 
@@ -18,6 +19,7 @@ pages = [
     st.Page(VIEWS / "architecture.py", url_path="architecture", title="Architecture", icon="🧩"),
     st.Page(VIEWS / "results.py", url_path="results", title="Results", icon="📊"),
     st.Page(VIEWS / "explorer.py", url_path="cases", title="Case explorer", icon="🔎"),
+    st.Page(VIEWS / "review.py", url_path="review", title="Review queue", icon="✅"),
     st.Page(VIEWS / "llm_boundary.py", url_path="llm-vs-code", title="LLM vs code", icon="⚙️"),
     st.Page(VIEWS / "roadmap.py", url_path="roadmap", title="Roadmap", icon="🧭"),
 ]

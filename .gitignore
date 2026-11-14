@@ -4,3 +4,4 @@ __pycache__/
 data/synthetic/*.db
 .env
 evals/results/oracle/
+data/reviews/

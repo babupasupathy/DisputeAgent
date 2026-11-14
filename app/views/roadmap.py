@@ -23,7 +23,10 @@ st.markdown(
     "synthetic-data bug (delivery scan city), fixed at the source.\n"
     "- **Reading step tested on 30 messy, hand-written threads** labelled blind by the owner: after three owner rulings on "
     "what counts as implied, every field right on 29 of 30 threads; an apology about the item became a reviewer signal "
-    "rather than an admission, so remedy offers stay the merchant's defence."
+    "rather than an admission, so remedy offers stay the merchant's defence.\n"
+    "- **Review queue built.** Reviewers work V1's fight and escalation cases by deadline, edit and approve letters, "
+    "accept losses, or draft a letter on demand for a brief-only case (with the admission guardrail). Every decision "
+    "is recorded, so the override rate and the letter edit rate are measured."
 )
 
 st.subheader("Next")
@@ -32,7 +35,8 @@ st.markdown(
 
     "| **Smaller model for reading** | Haiku 5.5 reads issuer notes and support messages | Keeps reading accuracy within 2 points of Sonnet at a fraction of the cost |\n"
     "| **V2: learn from outcomes** | P(win) fit on human-reviewed outcomes | Better-calibrated P(win) changes fewer than 10% of decisions |\n"
-    "| **Reviewer screen** | Shows the brief, a ready letter, and records every override | Review time under 2 minutes; override rate becomes a headline metric |\n"
+
+    "| **Measure review time and overrides** | Reviewers use the queue on real cases | Review time under 2 minutes; override rate under 10% before any auto-submit |\n"
     "| **Auto-submit, maybe** | Low-risk fight cases skip review | Only if measured accuracy clears a bar set in advance |"
 )
 

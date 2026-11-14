@@ -30,25 +30,36 @@ def cases() -> dict[str, dict]:
     return _by_case(_jsonl(CASES))
 
 
+# While a version is being re-run its folder is incomplete; fall back to the last finished run of it.
+FALLBACK = {"v1": "v1-run5", "v1-ondemand": "v1-ondemand-run5"}
+
+
+def _dir(version: str) -> Path:
+    d = RESULTS / version
+    if not (d / "scores.json").exists() and version in FALLBACK and not (d / "summary.json").exists():
+        return RESULTS / FALLBACK[version]
+    return d
+
+
 @st.cache_data
 def scores(version: str = "v0") -> dict:
-    p = RESULTS / version / "scores.json"
+    p = _dir(version) / "scores.json"
     return json.loads(p.read_text()) if p.exists() else {}
 
 
 @st.cache_data
 def outputs(version: str = "v0") -> dict[str, dict]:
-    return _by_case(_jsonl(RESULTS / version / "outputs.jsonl"))
+    return _by_case(_jsonl(_dir(version) / "outputs.jsonl"))
 
 
 @st.cache_data
 def per_case(version: str = "v0") -> dict[str, dict]:
-    return _by_case(_jsonl(RESULTS / version / "per_case.jsonl"))
+    return _by_case(_jsonl(_dir(version) / "per_case.jsonl"))
 
 
 @st.cache_data
 def judge(version: str = "v0") -> dict[str, dict]:
-    return _by_case(_jsonl(RESULTS / version / "judge.jsonl"))
+    return _by_case(_jsonl(_dir(version) / "judge.jsonl"))
 
 
 
