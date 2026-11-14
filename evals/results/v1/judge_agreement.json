@@ -1,0 +1,7 @@
+{
+ "n": 8,
+ "pass_agreement": 1.0,
+ "cohens_kappa": 1.0,
+ "mean_abs_score_diff": 0.406,
+ "judge_file": "judge.jsonl"
+}

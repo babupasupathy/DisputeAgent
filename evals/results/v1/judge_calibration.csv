@@ -1,0 +1,16 @@
+case_id,human_pass,human_addresses_requirements,human_grounded,human_clarity,human_format
+GEN-006,,,,,
+GEN-010,,,,,
+GEN-033,,,,,
+GEN-052,,,,,
+GEN-053,,,,,
+GEN-090,,,,,
+GEN-131,,,,,
+GEN-136,1,5,5,5,5
+GEN-137,1,5,5,5,5
+GEN-142,1,5,5,5,5
+HW-05,1,5,5,5,5
+HW-07,1,5,5,5,5
+HW-08,1,5,5,4,4
+HW-12,1,5,5,5,4
+HW-15,1,5,5,5,5
