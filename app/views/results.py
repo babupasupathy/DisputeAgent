@@ -28,7 +28,7 @@ tbl = pd.DataFrame([
     row("Latency p50 / p95", lambda s: f"{s['cost_latency']['latency_p50_s']:.1f} / {s['cost_latency']['latency_p95_s']:.1f} s"),
 ])
 st.dataframe(tbl, hide_index=True, width="stretch")
-st.caption("V1 letters: 76 drafted up front, 96.1% pass as judged. The other 50 escalations (conflicts or missing "
+st.caption("V1 letters: 76 drafted up front, 98.7% pass as judged. The other 50 escalations (conflicts or missing "
            "evidence) get a reviewer brief instead of a letter; when a reviewer contests one, the letter is drafted "
            "on demand, and with the admission guardrail those letters pass 89.5%. Field names were only counted from "
            "V1 on (–).")
@@ -40,7 +40,7 @@ st.markdown(
 |---|---|---|
 | **V0** | One model call, every record pasted in | 76% decisions; 20 winnable cases escalated; 14 wrongful auto-accepts ($5,377) |
 | **Account-age fix** | The tool reports age at order time instead of today; same agent, same prompt | Letters 62% → 92%; account-age failures 38 → 0; decisions unchanged |
-| **V1** | Decisions in code; the model reads text and writes letters; brief now, letter later; admission guardrail | Decisions 100%; 0 wrongful auto-accepts; letters 96%; cost −50%; p50 latency 10.6 s → 2.6 s |
+| **V1** | Decisions in code; the model reads text and writes letters; brief now, letter later; admission guardrail | Decisions 100%; 0 wrongful auto-accepts; letters 99%; cost −50%; p50 latency 10.6 s → 2.6 s |
 """
 )
 

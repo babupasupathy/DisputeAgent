@@ -383,6 +383,26 @@ Harness bug found and fixed while resuming: `_latest()` kept a judge's first, fa
 success (judge rows have no `output` field). Earlier versions had no duplicate judge rows, so their numbers
 are unchanged.
 
+### V1 run 6: remedy rule (2026-11-14)
+
+One writer rule added: describe a remedy only as the support message states it (no "remains available", no
+matching an unseen policy, never presented as fulfilled when the records show otherwise). Everything else as run
+5. Agent $1.88, judge $2.63.
+
+| | V1 run 5 | **V1 run 6** |
+|---|---|---|
+| Decisions correct / wrongful auto-accepts | 162/162 / 0 | **162/162 / 0** |
+| Up-front letters passing (as judged) | 96.1% (73/76) | **98.7% (75/76)** |
+| Fight letters / escalation letters | 50/51 / 23/25 | **51/51 / 24/25** |
+| Cost per case / p50 latency | $0.0116 / 2.6 s | **$0.0116 / 2.4 s** |
+
+GEN-131 and HW-15 now pass. The one failure, HW-06, is a $899 escalation (high value, rule 2) where the merchant
+received the customer's return and never refunded: the letter cites the remedy offer, and the judge rules that
+misleading. The reviewer notes already flag the unrefunded return. Any contest letter on this case is hard to make
+honest; a candidate policy change is to treat "merchant at fault" escalations as brief-only, like conflicts.
+One letter used a record status value ("label_sent") where plain words were wanted; the field-name check caught it.
+On-demand letters were not re-run (run 5: 89.5% with the guardrail).
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a

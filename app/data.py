@@ -31,7 +31,7 @@ def cases() -> dict[str, dict]:
 
 
 # While a version is being re-run its folder is incomplete; fall back to the last finished run of it.
-FALLBACK = {"v1": "v1-run5", "v1-ondemand": "v1-ondemand-run5"}
+FALLBACK = {"v1": "v1-run5", "v1-ondemand": "v1-ondemand-run5"}  # v1-ondemand: last measured in run 5
 
 
 def _dir(version: str) -> Path:
