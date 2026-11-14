@@ -269,6 +269,34 @@ fields but not fields against each other, so cross-field contradictions are a kn
 (3) human grading found three data-quality bugs in this project (account age, reviewer notes in issuer
 letters, scan location), all fixed at the source.
 
+### V1 run 4: corrected data and plain-language letters (2026-11-14)
+
+Same V1 code plus two fixes: the scan-location data bug (e1c13ac) and plain-language fact sheets with a
+no-field-names rule (0f0542d). Previous runs archived as `v1-run3` / `v1-ondemand-run3` (the letters the
+owner graded blind).
+
+| | V1 run 3 | **V1 run 4** |
+|---|---|---|
+| Decisions correct / wrongful auto-accepts | 162/162 / 0 | **162/162 / 0** |
+| Letters with internal field names | 26 | **0** |
+| Up-front letters passing, as judged | 97.4% (74/76) | **89.5% (68/76)** |
+| Up-front, after removing verified judge false failures | | **96.1% (73/76)** |
+| On-demand letters passing, as judged | 76% (38/50) | **68% (34/50)** |
+| On-demand, after removing verified judge false failures | | **72% (36/50)** |
+| Cost per case | $0.0113 | **$0.0111** |
+
+Judge false failures (7): the new basis line "N earlier delivered, undisputed orders placed 120 to 365
+days before this order" was true in every case (verified: each cited order was 130-358 days earlier) but
+the judge read it as a wrong claim about the spread of dates (GEN-054, -057, -088, -092, -095; on demand
+GEN-076, -082). Fix (192a660): the fact sheet now lists each prior order with its date and exact day count.
+Not yet measured: the next run (Haiku reading or messy messages experiment) measures it.
+
+Real up-front failures: a year slip (GEN-056, "2025-09-25" for 2026) and two remedy claims that overstate
+the record (HW-06: the customer returned the item and was never refunded; HW-15: implies the offer
+conformed to a policy whose terms are not on file). On demand, the remaining failures are the same
+categories as before: arguing against the merchant's own admission of misdelivery or defect, AVS failed,
+one year slip.
+
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo
 shows when only its existence is recorded (GEN-107, GEN-110: rubric says material), and calling a
