@@ -95,6 +95,15 @@ with correct inputs V1's decision code should agree with it by construction. V1'
 therefore measures the reading step and the code's fidelity to the policy, not judgment. The
 meaningful tests become the text-reading accuracy and fresh, blind-graded letters.
 
+## Reading model: stay on Sonnet 5.5 (owner decision 2026-11-14)
+
+Haiku 5.5 matched Sonnet on every decision-driving field of the messy-thread reading eval (category,
+remedy, non-delivery, defect: 30/30 on 3 runs, no false positives) at about 1/18 of the reading cost, but it
+missed 1-2 more customer acknowledgements of receipt per 30 threads. Receipt is strong evidence in
+item-not-received disputes. Haiku would save about $0.002 per dispute; one lost dispute costs $200-500, so it
+would take roughly 100,000-250,000 disputes of savings to cover a single extra loss. Decision: Sonnet reads
+and writes. `READER_MODEL` exists in code for future experiments and is left unset.
+
 ## Open questions for the project owner
 
 Resolved 2026-11-09: categories (3, no "credit not processed"), costs ($15 + $20),

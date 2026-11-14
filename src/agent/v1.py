@@ -10,6 +10,7 @@ Output uses the shared schema (src/agent/schema.py); V1 adds a top-level "review
 from __future__ import annotations
 
 import json
+import os
 
 from src.agent.context import full_context
 from src.agent.decide import TEXT_FACTS, decide
@@ -39,6 +40,13 @@ def _verify(facts: dict, messages: list[dict]) -> tuple[dict, list[str]]:
         out[k] = {"present": ok, "message_id": f.get("message_id") if ok else None,
                   "quote": f.get("quote") if ok else None}
     return out, warnings
+
+
+def reader_model(model: str) -> str:
+    """READER_MODEL (env) for the reading step, else the agent model. Owner decision 2026-11-14: keep the agent
+    model (Sonnet 5.5) for reading. Haiku matched it on decision-driving fields but missed more implied
+    receipts, and a lost dispute ($200-500) outweighs ~$0.002 a case in savings. Leave READER_MODEL unset."""
+    return os.environ.get("READER_MODEL") or model
 
 
 def _read(client, model, usage, dispute: dict, candidates: list[str], messages: list[dict]) -> dict:
@@ -148,7 +156,7 @@ def draft_letter(client, conn, dispute: dict, model: str, reviewer_direction: st
     d = rec["get_dispute_details"]
     candidates = sorted({r.category for r in rules_for(d["network"], d["reason_code"])})
     messages = rec["get_support_communications"]["messages"]
-    read = _read(client, model, usage, d, candidates, messages)
+    read = _read(client, reader_model(model), usage, d, candidates, messages)
     facts, _ = _verify(read.get("facts") or {}, messages)
     rule = lookup(d["network"], d["reason_code"], read["category"])
     dec = decide(rec, rule, facts)
@@ -173,7 +181,7 @@ def run_case(client, conn, dispute: dict, model: str) -> dict:
     candidates = sorted({r.category for r in rows})
     messages = rec["get_support_communications"]["messages"]
 
-    read = _read(client, model, usage, d, candidates, messages)
+    read = _read(client, reader_model(model), usage, d, candidates, messages)
     facts, warnings = _verify(read.get("facts") or {}, messages)
     rule = lookup(d["network"], d["reason_code"], read["category"])
     dec = decide(rec, rule, facts)
@@ -214,6 +222,7 @@ def run_case(client, conn, dispute: dict, model: str) -> dict:
                      "rationale": dec.rationale},
         "draft": draft,
         "review": {"rule_fired": dec.rule_fired, "reviewer_notes": notes, "text_facts": facts,
-                   "reader_skipped": bool(read.get("skipped")), "letter_status": letter_status, "brief": brief},
+                   "reader_skipped": bool(read.get("skipped")), "reader_model": reader_model(model),
+                   "letter_status": letter_status, "brief": brief},
     }
     return {"output": output, "trace": trace, "tool_calls": [], "usage": usage.to_dict()}
