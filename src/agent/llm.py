@@ -97,8 +97,11 @@ def structured_call(client, *, model: str, system: str, messages: list, schema: 
         system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
         messages=messages,
         output_config={"effort": effort, "format": {"type": "json_schema", "schema": schema}},
-        betas=["server-side-fallback-2026-07-01"], fallbacks="default",
+        betas=[],
     )
+    # Server-side refusal fallback exists for Sonnet/Opus 5.5, not Haiku 5.5 (a refusal there raises LLMError).
+    if not model.startswith("claude-haiku"):
+        kw.update(betas=["server-side-fallback-2026-07-01"], fallbacks="default")
     if tools:
         kw["tools"] = tools
     t0 = time.perf_counter()

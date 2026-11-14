@@ -1,0 +1,137 @@
+{
+ "category": {
+  "n": 30,
+  "agreement": 1.0
+ },
+ "customer_ack_receipt": {
+  "n": 30,
+  "agreement": 0.933,
+  "false_positives": 0,
+  "false_negatives": 2
+ },
+ "merchant_offered_remedy": {
+  "n": 30,
+  "agreement": 1.0,
+  "false_positives": 0,
+  "false_negatives": 0
+ },
+ "merchant_ack_nondelivery": {
+  "n": 30,
+  "agreement": 1.0,
+  "false_positives": 0,
+  "false_negatives": 0
+ },
+ "merchant_admitted_defect": {
+  "n": 30,
+  "agreement": 1.0,
+  "false_positives": 0,
+  "false_negatives": 0
+ },
+ "all_fields_right": 0.933,
+ "cost_usd": 0.0059,
+ "errors": 0,
+ "misses": [
+  {
+   "id": "MSY-15",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "reader": {
+    "present": false,
+    "message_id": null,
+    "quote": null
+   },
+   "design_intent": false
+  },
+  {
+   "id": "MSY-20",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "reader": {
+    "present": false,
+    "message_id": null,
+    "quote": null
+   },
+   "design_intent": false
+  }
+ ],
+ "label_vs_design_intent_disagreements": [
+  {
+   "id": "MSY-06",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-07",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-11",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-12",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-15",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-16",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-16",
+   "field": "merchant_offered_remedy",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-17",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-17",
+   "field": "merchant_offered_remedy",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-18",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-18",
+   "field": "merchant_offered_remedy",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-19",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "design_intent": false
+  },
+  {
+   "id": "MSY-20",
+   "field": "customer_ack_receipt",
+   "label": "1",
+   "design_intent": false
+  }
+ ]
+}
