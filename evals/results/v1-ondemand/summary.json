@@ -1,0 +1,27 @@
+{
+ "letters": 50,
+ "judged": 50,
+ "pass_rate": 0.68,
+ "failed": [
+  "GEN-026",
+  "GEN-028",
+  "GEN-029",
+  "GEN-030",
+  "GEN-031",
+  "GEN-032",
+  "GEN-076",
+  "GEN-082",
+  "GEN-111",
+  "GEN-114",
+  "GEN-126",
+  "GEN-127",
+  "GEN-128",
+  "GEN-129",
+  "GEN-135",
+  "HW-04"
+ ],
+ "fact_check_flags": [
+  "GEN-135"
+ ],
+ "letter_cost_usd": 1.1256
+}
