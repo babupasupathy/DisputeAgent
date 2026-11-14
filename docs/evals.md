@@ -372,7 +372,16 @@ remains available" (GEN-131), and two letters implying an offer conformed to a p
 file or calling a remedy prompt when the return was received and never refunded (HW-15, HW-06). The apology
 signal reached the reviewer notes in 34 cases.
 
-On-demand letters: interrupted when the API credit ran out (48 of 50 drafted, none judged yet); resumable.
+On-demand letters (simulated reviewer contesting all 50 brief-only escalations; finished after a credit
+top-up): 38/50 pass as judged (76%). The admission guardrail would block 12 of these cases, 8 of them failing
+letters; **the letters it lets through pass 89.5% (34/38)**, up from 78.9% in run 4. The 4 remaining failures
+are weak cases where an honest contest letter is hard: AVS did not match but the letter calls the delivery
+address the cardholder's billing address (GEN-071, GEN-075), delivery recorded to a different address (GEN-029),
+and one letter scored 3 on addresses-requirements (GEN-031).
+
+Harness bug found and fixed while resuming: `_latest()` kept a judge's first, failed attempt over a later
+success (judge rows have no `output` field). Earlier versions had no duplicate judge rows, so their numbers
+are unchanged.
 
 Caveats: the rubric's examples were written after reading these 40 letters, so these numbers are
 optimistic. Two severity calls are product decisions still open: describing what a dispatch photo

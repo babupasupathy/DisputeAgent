@@ -28,10 +28,10 @@ tbl = pd.DataFrame([
     row("Latency p50 / p95", lambda s: f"{s['cost_latency']['latency_p50_s']:.1f} / {s['cost_latency']['latency_p95_s']:.1f} s"),
 ])
 st.dataframe(tbl, hide_index=True, width="stretch")
-st.caption("V1 letters: 76 drafted up front pass 89.5% as judged; 5 of the 8 failures are verified judge false "
-           "failures on a true sentence ('placed 120 to 365 days before this order'), so 96.1% after correction. "
-           "50 conflict / missing-evidence escalations get a reviewer brief instead of a letter. "
-           "Field names were only counted from V1 on (–).")
+st.caption("V1 letters: 76 drafted up front, 96.1% pass as judged. The other 50 escalations (conflicts or missing "
+           "evidence) get a reviewer brief instead of a letter; when a reviewer contests one, the letter is drafted "
+           "on demand, and with the admission guardrail those letters pass 89.5%. Field names were only counted from "
+           "V1 on (–).")
 
 st.subheader("What each step fixed")
 st.markdown(
@@ -40,7 +40,7 @@ st.markdown(
 |---|---|---|
 | **V0** | One model call, every record pasted in | 76% decisions; 20 winnable cases escalated; 14 wrongful auto-accepts ($5,377) |
 | **Account-age fix** | The tool reports age at order time instead of today; same agent, same prompt | Letters 62% → 92%; account-age failures 38 → 0; decisions unchanged |
-| **V1** | Decisions in code; the model reads text and writes letters; brief now, letter later | Decisions 100%; 0 wrongful auto-accepts; cost −52%; p50 latency 10.6 s → 2.6 s |
+| **V1** | Decisions in code; the model reads text and writes letters; brief now, letter later; admission guardrail | Decisions 100%; 0 wrongful auto-accepts; letters 96%; cost −50%; p50 latency 10.6 s → 2.6 s |
 """
 )
 
@@ -94,3 +94,24 @@ lat = pd.DataFrame([{"case": k, "latency_s": v["usage"].get("latency_s", 0), "co
 st.scatter_chart(lat, x="latency_s", y="cost_usd", x_label="latency (s)", y_label="cost (USD)")
 st.caption("Bottom-left: accepts and brief-only escalations (no letter, often no model call). "
            "Upper-right: cases with a letter. Grading 76 letters with Opus costs about $2.70 per run.")
+
+st.subheader("Reading the support messages")
+st.markdown(
+    """
+With decisions in code, V1 is only as good as its reading step: the model reads the issuer's note and the support
+messages for four facts (customer acknowledged receipt, merchant offered a remedy, merchant acknowledged
+non-delivery, merchant admitted a defect). It was tested on 30 deliberately messy, hand-written threads (typos,
+sarcasm, "nvm found it", Spanish, store credit, an automated refund notice, apologies vs admissions) labelled
+blind by the project owner.
+
+| | First run | After the owner's rulings on what counts as implied |
+|---|---|---|
+| Threads with every field right | 63% | **97%** (29/30, on two runs) |
+| Facts claimed that the owner rejected | 0 | 0 |
+
+The reader's misses all went the safe way: it never claimed a fact that wasn't there. An apology about the item
+became a soft signal for the reviewer rather than an admission, so the merchant's remedy offer stays its defence.
+Haiku 5.5 matched Sonnet on every decision-driving field at 1/18 of the cost but missed more implied receipts;
+Sonnet stays, because one lost dispute ($200–500) outweighs about $0.002 saved per dispute.
+"""
+)

@@ -22,9 +22,9 @@ c[0].metric("Decision accuracy", f"{v1['decision']['accuracy']:.0%}", f"V0: {v0[
 c[1].metric("Wrongful auto-accepts", f"{v1['decision']['wrongful_auto_accepts']}",
             f"V0: {v0['decision']['wrongful_auto_accepts']} (${v0['decision']['wrongful_auto_accept_usd']:,.0f})",
             delta_color="off", delta_arrow="off")
-c[2].metric("Letters ready to send", "96%", "V0: 62%", delta_color="off", delta_arrow="off",
-            help="V1 letters drafted up front that pass the calibrated judge, after removing 5 verified judge "
-                 "false failures (89.5% as judged). V0: 61.7% as judged.")
+c[2].metric("Letters ready to send", f"{v1['draft_quality']['pass_rate']:.0%}",
+            f"V0: {v0['draft_quality']['pass_rate']:.0%}", delta_color="off", delta_arrow="off",
+            help="Letters drafted up front that pass the calibrated judge, as judged.")
 c[3].metric("Cost per case", f"${v1['cost_latency']['mean_usd_per_case']:.3f}",
             f"V0: ${v0['cost_latency']['mean_usd_per_case']:.3f}", delta_color="off", delta_arrow="off")
 c[4].metric("Typical latency", f"{v1['cost_latency']['latency_p50_s']:.1f} s",

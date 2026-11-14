@@ -53,10 +53,14 @@
  "letter": {
   "with_reviewer_note": 8,
   "with_concession": 0,
+  "with_field_names": 21,
   "concession_cases": []
  },
  "draft_quality": {
   "n_judged": 117,
+  "letter_status": {
+   "drafted": 162
+  },
   "mean_scores": {
    "addresses_requirements": 4.855,
    "clarity": 4.786,

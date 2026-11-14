@@ -22,7 +22,10 @@ def _latest(path: Path) -> dict[str, dict]:
     if path.exists():
         for line in open(path):
             r = json.loads(line)
-            if r.get("output") is not None or r["case_id"] not in out:
+            # Later rows win, except that an error never replaces an earlier success. (Judge rows have no
+            # "output" field, so the old "has output" test kept a judge's first, failed attempt.)
+            prev = out.get(r["case_id"])
+            if prev is None or not r.get("error") or prev.get("error"):
                 out[r["case_id"]] = r
     return out
 

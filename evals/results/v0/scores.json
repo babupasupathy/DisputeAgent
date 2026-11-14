@@ -53,12 +53,16 @@
  "letter": {
   "with_reviewer_note": 14,
   "with_concession": 1,
+  "with_field_names": 20,
   "concession_cases": [
    "HW-06"
   ]
  },
  "draft_quality": {
   "n_judged": 115,
+  "letter_status": {
+   "drafted": 162
+  },
   "mean_scores": {
    "addresses_requirements": 4.591,
    "clarity": 4.661,
