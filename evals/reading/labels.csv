@@ -1,0 +1,31 @@
+id,category,customer_ack_receipt,merchant_offered_remedy,merchant_ack_nondelivery,merchant_admitted_defect,note
+MSY-01,item_not_received,0,0,0,0,
+MSY-02,item_not_received,1,0,0,0,
+MSY-03,item_not_received,0,0,0,0,"This can be a customer telling sarcastically, or the customer just reading out a message that it says delivered , and cannot find the package"
+MSY-04,not_as_described,1,0,0,0,
+MSY-05,item_not_received,0,0,0,0,"The neighbor took a package, but is the package from our merchant? Need to wait for the neighbor to give the package back"
+MSY-06,not_as_described,1,1,0,1,Implicit acceptance of a defect.
+MSY-07,not_as_described,1,1,0,1,implicit acceptance of a defect
+MSY-08,item_not_received,0,0,0,0,Merchant is investigating if the package is lost
+MSY-09,item_not_received,0,0,1,1,
+MSY-10,item_not_received,0,0,0,0,
+MSY-11,not_as_described,1,0,0,1,
+MSY-12,not_as_described,1,0,0,0,
+MSY-13,item_not_received,1,0,0,0,
+MSY-14,item_not_received,1,0,0,0,
+MSY-15,not_as_described,1,1,0,1,Implicit acceptance of a Not as Described by the merchant
+MSY-16,not_as_described,1,1,0,1,
+MSY-17,not_as_described,1,1,0,1,
+MSY-18,not_as_described,1,1,0,1,
+MSY-19,not_as_described,1,0,0,0,
+MSY-20,not_as_described,1,0,0,1,
+MSY-21,not_as_described,1,0,0,0,
+MSY-22,item_not_received,0,0,0,0,
+MSY-23,not_as_described,1,0,0,0,
+MSY-24,item_not_received,0,0,0,0,
+MSY-25,item_not_received,0,0,0,0,"Merchant sending to a wrong/old address, and customer knowing that it went there, does not mean customer has received it"
+MSY-26,item_not_received,0,0,0,0,
+MSY-27,item_not_received,0,0,0,0,
+MSY-28,item_not_received,0,0,0,0,"Merchant is only looking for it, they have not ack non-delivery"
+MSY-29,item_not_received,0,1,1,0,
+MSY-30,not_as_described,1,1,0,1,
