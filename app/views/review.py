@@ -17,7 +17,7 @@ STORE = ReviewStore(ROOT / "data" / "reviews" / "reviews.jsonl")
 VERSION = "v1"
 
 st.title("Review queue")
-st.caption("Every response passes a person before it reaches the issuer. Decisions here are recorded so the "
+st.caption("V1's fight and escalation cases. Every response passes a person before it reaches the issuer. Decisions here are recorded so the "
            "override rate and how much reviewers edit letters are measured, not guessed. On the hosted demo, "
            "decisions last until the app restarts; run the app locally to keep them.")
 

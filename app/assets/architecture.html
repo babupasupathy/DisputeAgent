@@ -109,86 +109,136 @@ pre.tree { font-family: var(--mono); font-size: 0.82rem; line-height: 1.6; backg
 pre.tree .c { color: var(--muted); }
 footer { font-size: 0.88rem; color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) { .node { transition: border-color .15s, box-shadow .15s; } }
+.lane.human { background: var(--surface); }
+.lane.human .lane-head h3 { color: var(--escalate); }
+.band { border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: var(--evals-bg); display: grid; gap: 10px; }
+.band .lane-head h3 { color: var(--evals); }
+.band .nodes { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.tag.code { color: var(--world); background: var(--world-bg); }
+.tag.model { color: var(--agent); background: var(--agent-bg); }
+.tag.human { color: var(--escalate); background: var(--surface); border: 1px solid var(--line); }
+.cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 760px) { .cmp { grid-template-columns: 1fr; } }
+.cmp > div { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.cmp h3 { margin-bottom: 4px; }
+.vlabel { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 </style>
 
 <div class="wrap">
   <header>
     <span class="eyebrow">Merchant-side chargeback agent · prototype</span>
     <h1>Dispute Agent Architecture</h1>
-    <p class="lede">What has been built so far, how the pieces connect, and how one dispute flows through them. Everything runs on synthetic data.</p>
+    <p class="lede">How the pieces fit together in V1, the current version, and how they differ from the V0 baseline. Everything runs on synthetic data.</p>
     <div class="status">
-      <span class="pill done"><b>Step 1 done</b> · synthetic store, rules table, labels</span>
-      <span class="pill done"><b>Step 2 done</b> · V0 baseline measured on 162 cases</span>
-      <span class="pill done"><b>V1 done</b> · decisions in code, model reads and writes</span>
-      <span class="pill todo"><b>Steps 3–7</b> · not started</span>
+      <span class="pill done"><b>Synthetic world</b> · store, rules table, 162 labelled cases</span>
+      <span class="pill done"><b>V0</b> · baseline measured</span>
+      <span class="pill done"><b>V1</b> · current: decisions in code, model reads and writes</span>
+      <span class="pill done"><b>Review queue</b> · built</span>
+      <span class="pill todo"><b>Next</b> · V2, learn from reviewed outcomes</span>
     </div>
   </header>
 
   <section aria-labelledby="map">
-    <span class="eyebrow">The big picture</span>
-    <h2 id="map">Three parts, one direction</h2>
-    <p>A fake merchant (the <em>synthetic world</em>) produces disputes and the records behind them. The <em>agent</em> reads those records and decides what to do. The <em>eval harness</em> knows the right answer for every case and grades the agent. Answers flow left to right only: the agent code never imports the eval code or sees the labels.</p>
+    <span class="eyebrow">The big picture (V1)</span>
+    <h2 id="map">From dispute to reviewed response</h2>
+    <p>A fake merchant (the <em>synthetic world</em>) produces disputes and the records behind them. The <em>agent</em> reads those records and proposes fight, accept or escalate. A <em>person</em> reviews every response before it would reach the issuer. Separately, the <em>eval harness</em> knows the right answer for every case and grades every version the same way. The agent never sees the answers.</p>
     <div class="diagram" role="group" aria-label="Architecture diagram">
       <div class="lane world">
-        <div class="lane-head"><h3>Synthetic world</h3><span>Step 1 · fake merchant + card processor</span></div>
+        <div class="lane-head"><h3>Synthetic world</h3><span>fake merchant + card processor</span></div>
         <button class="node" data-k="rules"><strong>Rules table</strong><small>data/rules/*.csv</small></button>
         <div class="down">↓</div>
         <button class="node" data-k="generator"><strong>Data generator</strong><small>src/backend/generator.py</small></button>
         <div class="down">↓</div>
         <button class="node" data-k="db"><strong>Store database</strong><small>data/synthetic/store.db</small></button>
         <div class="down">↓</div>
-        <button class="node" data-k="repo"><strong>Repository (tool layer)</strong><small>src/backend/repository.py</small></button>
-        <button class="node" data-k="api"><strong>Mock HTTP API</strong><small>src/backend/api.py</small></button>
+        <button class="node" data-k="repo"><strong>Tools (records)</strong><small>src/backend/repository.py</small></button>
       </div>
       <div class="gap" aria-hidden="true"><svg viewBox="0 0 28 28"><path d="M3 14h20M16 7l7 7-7 7"/></svg></div>
       <div class="lane agent">
-        <div class="lane-head"><h3>Agent (V0)</h3><span>Step 2 · one model call per dispute</span></div>
-        <button class="node" data-k="context"><strong>Gather all records</strong><small>src/agent/context.py</small></button>
+        <div class="lane-head"><h3>Agent (V1)</h3><span>code decides, the model reads and writes</span></div>
+        <button class="node" data-k="fetch"><strong>Fetch all records</strong><small>code · context.py</small></button>
         <div class="down">↓</div>
-        <button class="node" data-k="prompt"><strong>Prompt + policy</strong><small>src/agent/prompts.py</small></button>
+        <button class="node" data-k="reader"><strong>Read the text</strong><small>Sonnet · v1.py reader</small></button>
         <div class="down">↓</div>
-        <button class="node" data-k="llm"><strong>Claude call</strong><small>src/agent/llm.py</small></button>
+        <button class="node" data-k="decide"><strong>Decide</strong><small>code · decide.py</small></button>
         <div class="down">↓</div>
-        <button class="node" data-k="schema"><strong>Structured answer</strong><small>src/agent/schema.py</small></button>
-        <button class="node" data-k="config"><strong>Config</strong><small>config/*.toml</small></button>
+        <button class="node" data-k="writer"><strong>Letter, brief or note</strong><small>Sonnet / code · v1.py</small></button>
       </div>
       <div class="gap" aria-hidden="true"><svg viewBox="0 0 28 28"><path d="M3 14h20M16 7l7 7-7 7"/></svg></div>
-      <div class="lane evals">
-        <div class="lane-head"><h3>Eval harness</h3><span>Step 2 · grades every version the same way</span></div>
-        <button class="node" data-k="labels"><strong>Ground-truth cases</strong><small>evals/cases/cases.jsonl</small></button>
+      <div class="lane human">
+        <div class="lane-head"><h3>Human review</h3><span>every response, before submission</span></div>
+        <button class="node" data-k="queue"><strong>Review queue</strong><small>app/views/review.py</small></button>
         <div class="down">↓</div>
-        <button class="node" data-k="run"><strong>Runner</strong><small>evals/run.py</small></button>
+        <button class="node" data-k="ondemand"><strong>Letter on demand</strong><small>draft_letter + guardrail</small></button>
         <div class="down">↓</div>
-        <button class="node" data-k="judge"><strong>Opus judge</strong><small>evals/judge.py</small></button>
+        <button class="node" data-k="store"><strong>Recorded decisions</strong><small>src/review_ui/store.py</small></button>
         <div class="down">↓</div>
-        <button class="node" data-k="score"><strong>Scorer + report</strong><small>evals/score.py</small></button>
-        <button class="node" data-k="oracle"><strong>Oracle (self-test)</strong><small>evals/oracle.py</small></button>
+        <button class="node" data-k="submit"><strong>Submit (gated)</strong><small>repository.submit_response</small></button>
+      </div>
+    </div>
+    <div class="band">
+      <div class="lane-head"><h3>Eval harness</h3><span>grades V0, V1 and every experiment on the same 162 cases; never imported by the agent</span></div>
+      <div class="nodes">
+        <button class="node" data-k="labels"><strong>Answer key</strong><small>evals/cases/cases.jsonl</small></button>
+        <button class="node" data-k="run"><strong>Runner + scorer</strong><small>evals/run.py, score.py</small></button>
+        <button class="node" data-k="judge"><strong>Calibrated Opus judge</strong><small>evals/judge.py</small></button>
+        <button class="node" data-k="checks"><strong>Code checks on letters</strong><small>evals/metrics/</small></button>
+        <button class="node" data-k="reading"><strong>Reading test</strong><small>evals/reading/</small></button>
+        <button class="node" data-k="braintrust"><strong>Braintrust</strong><small>evals/braintrust_sync.py</small></button>
       </div>
     </div>
     <div class="detail" id="detail" aria-live="polite">
       <h3 id="d-title">Click any box above</h3>
       <div class="where" id="d-where">Each box opens a short explanation here.</div>
-      <div id="d-body"><p class="hint">Start with <strong>Repository (tool layer)</strong>. It is the one piece every other part depends on: the agent reads records through it, and the labels are computed from the same database.</p></div>
+      <div id="d-body"><p class="hint">Start with <strong>Decide</strong>. Moving the decision from the model into code is the biggest difference between V0 and V1.</p></div>
     </div>
+  </section>
+
+  <section aria-labelledby="v0v1">
+    <span class="eyebrow">What changed</span>
+    <h2 id="v0v1">V0 vs V1</h2>
+    <div class="tablebox"><table>
+      <thead><tr><th>Step</th><th>V0 baseline</th><th>V1 (current)</th></tr></thead>
+      <tbody>
+        <tr><td>Fetch records</td><td><span class="tag code">code</span> all seven lookups, pasted into one prompt</td><td><span class="tag code">code</span> same seven lookups, with account age at order time</td></tr>
+        <tr><td>Category, evidence, P(win), expected value, the 7 rules</td><td><span class="tag model">model</span> one Sonnet call does everything</td><td><span class="tag code">code</span> rules table, field checks, formula and rules in decide.py</td></tr>
+        <tr><td>Reading free text</td><td><span class="tag model">model</span> inside the same call</td><td><span class="tag model">model</span> Sonnet reads the issuer note and support messages; every fact must quote a message, and code checks the quote</td></tr>
+        <tr><td>Letter</td><td><span class="tag model">model</span> for every case, in the same call</td><td><span class="tag model">model</span> for fight and urgent escalations; a <span class="tag code">code</span> brief for conflict or missing-evidence escalations; a one-line note for accepts</td></tr>
+        <tr><td>Human review</td><td>not built</td><td><span class="tag human">person</span> review queue; letters on demand, with a guardrail when the merchant admitted the fault</td></tr>
+        <tr><td>Results on 162 cases</td><td>76% decisions, 14 wrongful auto-accepts, 62% letters, $0.023 a case</td><td>100% decisions, 0 wrongful auto-accepts, 99% letters, $0.012 a case</td></tr>
+      </tbody></table></div>
   </section>
 
   <section aria-labelledby="flow">
     <span class="eyebrow">Walkthrough</span>
-    <h2 id="flow">Follow one dispute</h2>
-    <p>Case <code>GEN-005</code> from the smoke test: a Mastercard “goods not received” dispute for $145.</p>
-    <ol class="steps">
-      <li><div><span class="tag world">synthetic world</span><h3>A dispute arrives</h3><p>The generator created an order, a shipment with tracking events, support messages and a dispute record. The webhook says reason category <code>general</code>, but the issuer's note says the item never arrived.</p></div></li>
-      <li><div><span class="tag agent">agent</span><h3>Every record is collected</h3><p><code>full_context()</code> calls all seven read functions: dispute details, deadline, order, tracking, customer history, support messages, refunds. V0 does not choose what to look at; it gets everything.</p></div></li>
-      <li><div><span class="tag agent">agent</span><h3>One prompt goes to Claude</h3><p>The system prompt holds the merchant's decision policy (built from <code>decision.toml</code>), grounding rules and the list of evidence types. The records are pasted in as JSON. The model must answer in a fixed JSON shape.</p></div></li>
-      <li><div><span class="tag agent">agent</span><h3>The model answers</h3><p>It reclassified the dispute as Mastercard 4853 <em>item not received</em>, computed EV = 0.55 × $145 − $35 = $44.75 (positive), saw that signature/photo proof and customer acknowledgement were missing, and chose <span class="verdict v-escalate">escalate</span> under rule 6. It also wrote a draft letter for a human to review.</p></div></li>
-      <li><div><span class="tag evals">eval harness</span><h3>The answer is graded</h3><p>The runner stores the answer, token counts, cost ($0.03) and latency. The scorer compares category, evidence lists and decision against the label, and checks that every ID, amount and date in the draft appears in the records. The Opus judge scores the draft letter.</p><p><strong>Verdict: wrong.</strong> The label says <span class="verdict v-fight">fight</span>. For Mastercard 4853 the required evidence is tracking, a delivery scan and an address match, and all three were present. Signature or photo proof only strengthens a case; it is not required. V0 has no rules table, so it treated an optional item as required and escalated a winnable case. 20 of the 51 “fight” cases went the same way in the full run.</p></div></li>
-    </ol>
+    <h2 id="flow">One dispute, two versions</h2>
+    <p>Case <code>GEN-005</code>: a Mastercard “goods not received” dispute for $145. The webhook says reason category <code>general</code>; the issuer's note says the item never arrived. Tracking, a delivered scan and an address match are on file; there is no signature or photo.</p>
+    <div class="cmp">
+      <div>
+        <span class="vlabel">V0</span>
+        <h3>One call decides: <span class="verdict v-escalate">escalate</span>, wrong</h3>
+        <ol class="steps">
+          <li><div><h3>Everything goes in one prompt</h3><p>All the records, the policy and the list of evidence types. No rules table, so the model must guess which evidence this reason code requires.</p></div></li>
+          <li><div><h3>The model guesses</h3><p>It treats the missing signature or photo as <em>required</em>, computes EV = 0.55 × $145 − $35 = $44.75, and escalates under rule 6.</p></div></li>
+          <li><div><h3>Graded wrong</h3><p>The answer key says fight: a signature or photo only strengthens a case. 20 of the 51 “fight” cases went the same way in V0.</p></div></li>
+        </ol>
+      </div>
+      <div>
+        <span class="vlabel">V1</span>
+        <h3>Code decides: <span class="verdict v-fight">fight</span>, right</h3>
+        <ol class="steps">
+          <li><div><h3>The model reads the text</h3><p>It confirms the category (item not received) and finds no customer acknowledgement, admission or remedy in the messages.</p></div></li>
+          <li><div><h3>Code applies the policy</h3><p>The rules table says tracking, delivered scan and address match are required: all present. P(win) 0.70; EV = 0.70 × $145 − $35 = $66.50; no trigger applies, so rule 7: fight.</p></div></li>
+          <li><div><h3>The model writes the letter</h3><p>From a verified fact sheet. The calibrated judge passes it; it goes to the review queue for a person to approve.</p></div></li>
+        </ol>
+      </div>
+    </div>
   </section>
 
   <section aria-labelledby="policy">
-    <span class="eyebrow">The decision the agent must make</span>
+    <span class="eyebrow">The decision</span>
     <h2 id="policy">Fight, accept or escalate</h2>
-    <p>Fighting costs money, so the policy starts from expected value. The numbers are product decisions stored in <code>config/decision.toml</code>, not in code. The labeler uses the same file to compute the right answers.</p>
+    <p>Fighting costs money, so the policy starts from expected value. The numbers are product decisions stored in <code>config/decision.toml</code>. In V0 the model applied these rules; in V1 code applies them, and the answer key uses the same file.</p>
     <div class="formula">expected value = P(win) × disputed amount − $35.00 &nbsp;<span style="color:var(--muted)">($15 processor fee + $20 analyst time)</span></div>
     <p>Rules apply in order. The first one that matches decides.</p>
     <div class="rules">
@@ -200,7 +250,7 @@ footer { font-size: 0.88rem; color: var(--muted); }
       <div class="rule"><span class="n">6</span><span>Under 72 hours left, records conflict, or required evidence missing</span><span class="verdict v-escalate">escalate</span></div>
       <div class="rule"><span class="n">7</span><span>Anything else</span><span class="verdict v-fight">fight</span></div>
     </div>
-    <p class="hint">Rule 5 comes before rule 6 on purpose. A wrongly “missing” evidence item can push EV below zero and get a winnable case accepted with no human looking at it. The harness counts these <em>wrongful auto-accepts</em> separately.</p>
+    <p class="hint">Rule 5 comes before rule 6 on purpose: a low-value case isn't worth a person's time. The catch is that a wrongly “missing” evidence item can push EV below zero and get a winnable case accepted with nobody looking, so the harness counts these <em>wrongful auto-accepts</em> separately. V0 had 14; V1 has none.</p>
   </section>
 
   <section aria-labelledby="cases">
@@ -208,7 +258,7 @@ footer { font-size: 0.88rem; color: var(--muted); }
     <h2 id="cases">162 labelled cases</h2>
     <div class="two">
       <div>
-        <p>147 cases come from the generator across scenarios chosen to stress the policy. 15 are hand-written edge cases, for example an amount exactly at $750 or a deadline exactly 72 hours away.</p>
+        <p>147 cases come from the generator across scenarios chosen to stress the policy. 15 are hand-written edge cases, for example an amount exactly at $750 or a deadline exactly 72 hours away. A separate set of 30 hand-written, messy support threads tests the reading step.</p>
         <div class="tablebox"><table>
           <thead><tr><th>Correct answer</th><th style="text-align:right">Cases</th></tr></thead>
           <tbody>
@@ -239,7 +289,7 @@ footer { font-size: 0.88rem; color: var(--muted); }
   </section>
 
   <section aria-labelledby="metrics">
-    <span class="eyebrow">How the agent is graded</span>
+    <span class="eyebrow">How every version is graded</span>
     <h2 id="metrics">What the harness measures</h2>
     <div class="tablebox"><table>
       <thead><tr><th>Dimension</th><th>Question it answers</th><th>How</th></tr></thead>
@@ -248,94 +298,83 @@ footer { font-size: 0.88rem; color: var(--muted); }
         <tr><td>Evidence</td><td>Did it list the right evidence as present and missing? How often did it call real evidence “missing”?</td><td>Exact match</td></tr>
         <tr><td>Decision</td><td>Right action? How many wrongful auto-accepts, and how many dollars?</td><td>Exact match</td></tr>
         <tr><td>Escalation</td><td>When it escalates, should it have? Does it catch the cases that need a human?</td><td>Precision / recall</td></tr>
-        <tr><td>No fabrication</td><td>Does every ID, amount, date and tracking number in the draft appear in the records?</td><td>Regex against the records</td></tr>
-        <tr><td>Draft quality</td><td>Is the letter on point, grounded, clear and well formatted?</td><td>Opus judge, 1–5 per criterion</td></tr>
-        <tr><td>Tool use</td><td>Did it look up what it needed and skip what it didn't?</td><td>Call trace (from V1 on)</td></tr>
+        <tr><td>No invented facts</td><td>Does every ID, amount, date and tracking number in the letter appear in the records?</td><td>Code check against the records</td></tr>
+        <tr><td>Letter hygiene</td><td>Any concession, note to the reviewer, or internal field name in a letter meant for the issuer?</td><td>Code checks</td></tr>
+        <tr><td>Letter quality</td><td>Is the letter on point, grounded, clear and well formatted, with no material error?</td><td>Opus judge, calibrated against 60 human-graded letters</td></tr>
+        <tr><td>Reading</td><td>Does the model pull the right facts out of messy support messages?</td><td>30 hand-written threads, owner-labelled</td></tr>
         <tr><td>Cost and speed</td><td>Dollars per case, p50/p95 latency, which model actually served</td><td>Logged per call</td></tr>
       </tbody></table></div>
-    <p class="hint">The harness was checked before any real run. An oracle that reads the labels scores 100%. Deliberately breaking 10% of its answers makes exactly those 17 cases fail. The judge's grades count as uncalibrated until a person grades a sample of 40 drafts for comparison.</p>
-  </section>
-
-  <section aria-labelledby="next">
-    <span class="eyebrow">Gaps</span>
-    <h2 id="next">Not built yet</h2>
-    <div class="two">
-      <div>
-        <h3>Empty folders waiting for later steps</h3>
-        <ul class="plain">
-          <li><code>src/tools/</code> lets the agent call the repository functions as tools instead of getting everything pasted in.</li>
-          <li><code>src/review_ui/</code> is where a human approves a draft. Without approval, <code>submit_response</code> refuses to submit.</li>
-        </ul>
-      </div>
-      <div>
-        <h3>Open human tasks</h3>
-        <ul class="plain">
-          <li>Hand-check a sample of the generated cases and labels.</li>
-          <li>Grade 40 drafts to calibrate the judge.</li>
-          <li>Verify the rules table against primary Visa and Mastercard documents. Every row is marked <em>VERIFY</em>.</li>
-        </ul>
-      </div>
-    </div>
   </section>
 
   <section aria-labelledby="files">
     <span class="eyebrow">Reference</span>
     <h2 id="files">File map</h2>
-    <pre class="tree">config/
+    <pre class="tree">app/                   <span class="c"># Streamlit: overview, results, case explorer, review queue</span>
+config/
   decision.toml        <span class="c"># thresholds, costs, P(win) model (product decisions)</span>
-  agent.toml           <span class="c"># effort, max tokens, retries, concurrency</span>
+  agent.toml           <span class="c"># effort and token limits per step</span>
   pricing.toml         <span class="c"># $ per million tokens, for cost logging</span>
-data/rules/
-  rules_table.csv      <span class="c"># 10 network reason codes → required + strong evidence</span>
-  evidence_definitions.csv
+data/rules/            <span class="c"># rules table + evidence definitions</span>
 src/
-  backend/             <span class="c"># synthetic world: schema.sql, generator, repository, api, clock</span>
+  backend/             <span class="c"># synthetic store: generator, repository (the tools), mock API</span>
   knowledge/rules.py   <span class="c"># rules-table lookup</span>
-  agent/               <span class="c"># v0.py, context, prompts, schema, llm</span>
-  tools/  review_ui/   <span class="c"># empty: later steps</span>
+  agent/
+    v0.py              <span class="c"># V0: one model call</span>
+    v1.py, decide.py   <span class="c"># V1: reader + writer (model), decision layer (code)</span>
+    prompts.py, llm.py <span class="c"># prompts, structured calls, cost logging</span>
+  review_ui/store.py   <span class="c"># recorded review decisions, override metrics</span>
+  tools/               <span class="c"># unused: V1 fetches records in code (model-chosen tools is an optional experiment)</span>
 evals/
-  labeling/            <span class="c"># labeler, hand-written cases, build_cases, handcheck sheet</span>
-  cases/cases.jsonl    <span class="c"># 162 labelled cases</span>
-  metrics/             <span class="c"># deterministic, fabrication, judge</span>
-  run.py judge.py score.py oracle.py test_deepeval.py
-  results/&lt;version&gt;/   <span class="c"># outputs.jsonl, judge.jsonl, scores.json, report.md</span></pre>
+  cases/cases.jsonl    <span class="c"># 162 labelled cases (never read by the agent)</span>
+  labeling/            <span class="c"># answer key from the written policy, hand-written edge cases</span>
+  metrics/             <span class="c"># exact-match checks, fact checker, letter checks, judge rubric</span>
+  reading/             <span class="c"># 30 messy threads + owner labels</span>
+  run.py judge.py score.py ondemand.py braintrust_sync.py
+  results/&lt;version&gt;/   <span class="c"># outputs, judge grades, scores and report per version and run</span>
+docs/                  <span class="c"># decisions.md (why), evals.md (every measurement)</span></pre>
   </section>
 
-  <footer>Snapshot of branch <code>claude/relaxed-faraday-ubs0ec</code>, 9 November 2026. All data is synthetic.</footer>
+  <footer>Branch <code>claude/relaxed-faraday-ubs0ec</code>. All data is synthetic.</footer>
 </div>
 
 <script>
 const D = {
   rules: ["Rules table", "data/rules/rules_table.csv · evidence_definitions.csv · src/knowledge/rules.py",
-    "<p>One row per card-network reason code (Visa 13.1, 10.4, Mastercard 4853 and others). Each row lists the evidence a merchant must have and the evidence that strengthens a case, plus the response window and a source.</p><ul><li>The generator uses it to decide what evidence to create or leave out.</li><li>The labeler uses it to compute the correct answer.</li><li>V0 does <em>not</em> see it. V0 has to work out the requirements itself, which the next version (V1) will test.</li></ul>"],
+    "<p>One row per card-network reason code (Visa 13.1, 10.4, Mastercard 4853 and others): the evidence the network expects, the evidence that strengthens a case, and the response window, each with a source.</p><ul><li>V1's decision code looks up what each dispute requires here.</li><li>The answer key uses the same table.</li><li>V0 never saw it, which is why it guessed requirements wrong.</li></ul>"],
   generator: ["Data generator", "src/backend/generator.py",
-    "<p>Builds a fake merchant from a fixed random seed, so every rebuild gives identical data. Each case starts from a scenario (strong evidence, weak, conflicting records, high value, repeat disputer, deadline near, refunds…) and the generator writes matching rows: customer, order, shipment, tracking events, support messages, refunds, returns and the dispute.</p>"],
+    "<p>Builds a fake merchant from a fixed random seed: customers, orders, shipments with tracking events, support messages, refunds, returns and disputes, across scenarios chosen to stress the policy. Human grading found two bugs here (account age measured on the wrong date, delivery scans in the wrong city); both were fixed at the source.</p>"],
   db: ["Store database", "data/synthetic/store.db · src/backend/schema.sql",
-    "<p>A SQLite file standing in for the merchant's systems and the card processor. Tables: customers, products, listing snapshots, orders, order items, shipments, tracking events, support messages, refunds, returns, disputes, escalations, submissions.</p><p>It is rebuilt by <code>python -m evals.labeling.build_cases</code> and is not committed.</p>"],
-  repo: ["Repository (tool layer)", "src/backend/repository.py · src/backend/clock.py",
-    "<p>The functions that read and write the store. They are what an agent's tools will call.</p><ul><li><b>Read:</b> get_dispute_details, check_deadline, get_order_details, get_shipping_tracking, get_customer_history, get_support_communications, get_refund_status.</li><li><b>Write:</b> escalate_to_human, submit_response. Submitting raises <code>ApprovalRequired</code> unless a human approved it.</li><li>Addresses, emails and IPs are masked before anything leaves this layer.</li><li>A frozen clock means “hours until deadline” is the same on every run.</li></ul>"],
-  api: ["Mock HTTP API", "src/backend/api.py",
-    "<p>A FastAPI wrapper over the same repository functions (<code>/orders/…</code>, <code>/processor/disputes/…</code>), so you can browse the fake merchant like a real service: <code>uvicorn src.backend.api:app --reload</code>.</p><p>The agent does not go through HTTP. It calls the repository in-process, which is faster and gives identical data.</p>"],
-  context: ["Gather all records", "src/agent/context.py",
-    "<p><code>full_context()</code> calls all seven read functions for the dispute and returns them as a list shaped like tool calls. V0 pastes all of it into the prompt.</p><p>Shaping it like tool calls means the fabrication check and the tool-use metrics work the same way once later versions call tools for real.</p>"],
-  prompt: ["Prompt + policy", "src/agent/prompts.py",
-    "<p>The system prompt has three parts:</p><ul><li><b>Decision policy</b>, generated from <code>decision.toml</code>: the EV formula and the seven ordered rules.</li><li><b>Grounding rules:</b> use only facts in the records, list missing evidence as missing, keep personal data masked.</li><li><b>Draft rules:</b> for fight or escalate, write the representment letter; for accept, one sentence.</li></ul>"],
-  llm: ["Claude call", "src/agent/llm.py · src/agent/v0.py",
-    "<p>One Anthropic Messages call per dispute, with the answer constrained to a JSON schema. The system prompt is cached between calls.</p><ul><li>Model from <code>ANTHROPIC_MODEL</code> (Sonnet 5.5 for the agent). It is never hard-coded.</li><li>Key from <code>ANTHROPIC_API_KEY</code>, falling back to <code>DISPUTE_AGENT_ANTHROPIC_KEY</code>.</li><li>Every call logs tokens, dollar cost, latency and the model that actually answered.</li></ul>"],
-  schema: ["Structured answer", "src/agent/schema.py",
-    "<p>Every agent version returns the same JSON shape, which is what makes versions comparable:</p><ul><li><b>classification:</b> network, reason code, category</li><li><b>evidence:</b> required items present / missing, strong items present</li><li><b>assessment:</b> P(win), expected value, conflicts, merchant fault</li><li><b>decision:</b> fight / accept / escalate, escalation reasons, rationale</li><li><b>draft:</b> letter and evidence list</li></ul>"],
-  config: ["Config", "config/decision.toml · agent.toml · pricing.toml",
-    "<ul><li><b>decision.toml:</b> $15 fee + $20 handling = $35 to fight; escalate at $750+, under 72 hours, or 2+ prior disputes; P(win) base rates by category.</li><li><b>agent.toml:</b> effort medium, 16k max output tokens, 4 retries, 4 cases in parallel.</li><li><b>pricing.toml:</b> per-model token prices for the cost numbers.</li></ul><p>The agent prompt and the labeler both read <code>decision.toml</code>, so changing a threshold changes both sides together.</p>"],
-  labels: ["Ground-truth cases", "evals/labeling/ → evals/cases/cases.jsonl",
-    "<p><code>build_cases</code> runs the generator, then a rule-based labeler works out the right answer for each dispute from the database, the rules table and <code>decision.toml</code>: category, required evidence present and missing, P(win), EV, conflicts, escalation triggers and the expected action.</p><p>15 hand-written edge cases sit alongside the 147 generated ones. A hand-check sheet lets a person spot-check the labels.</p>"],
-  run: ["Runner", "evals/run.py → evals/results/&lt;version&gt;/outputs.jsonl",
-    "<p>Runs one agent version over all cases, four at a time, and appends each result as it finishes. If interrupted, it resumes where it stopped.</p><p>Each row stores the answer, the full trace of what the agent saw, tool calls, usage and cost. Scoring then reads stored results, so re-scoring costs nothing.</p>"],
-  judge: ["Opus judge", "evals/judge.py · evals/metrics/judge.py · evals/judge_calibration.py",
-    "<p>For fight and escalate cases, a stronger model (Opus 5.5, from <code>JUDGE_MODEL</code>) grades the draft letter on four 1–5 criteria: addresses the reason code's requirements, grounded in the records, clear, correctly formatted. It also lists unsupported claims.</p><p>A draft passes if every score is 4 or higher and there are no unsupported claims. These numbers count as uncalibrated until a person grades a sample for comparison.</p>"],
-  score: ["Scorer + report", "evals/score.py · evals/metrics/deterministic.py · fabrication.py",
-    "<p>Compares each answer with its label and writes <code>scores.json</code> and a readable <code>report.md</code>: classification accuracy, evidence exact-match and false-missing rate, decision accuracy and confusion matrix, wrongful auto-accepts in count and dollars, escalation precision/recall, fabrication hits, judge pass rate, cost and latency.</p><p><code>test_deepeval.py</code> exposes the same checks as DeepEval tests.</p>"],
-  oracle: ["Oracle (self-test)", "evals/oracle.py",
-    "<p>A fake “agent” that answers by reading the labels. It must score 100%, and it does. That shows the scoring code is right before any money is spent on real runs.</p>"],
+    "<p>A SQLite file standing in for the merchant's systems and the card processor. Rebuilt by <code>python -m evals.labeling.build_cases</code>; not committed.</p>"],
+  repo: ["Tools (records)", "src/backend/repository.py",
+    "<p>Seven read functions (dispute, deadline, order, tracking, customer history, support messages, refunds) and two writes (escalate, submit). Addresses, emails and IPs are masked. <code>submit_response</code> refuses to submit without human approval. A mock HTTP API (<code>src/backend/api.py</code>) exposes the same functions.</p>"],
+  fetch: ["Fetch all records", "code · src/agent/context.py",
+    "<p>V1 calls all seven read functions every time. They are fast, free and small, so fetching everything is cheaper and can't miss a record. Letting the model choose which to call is kept as an optional experiment.</p>"],
+  reader: ["Read the text", "Claude Sonnet 5.5 · v1.py (_read, _verify)",
+    "<p>The model's first job: read the issuer's note and the support messages.</p><ul><li>Picks the category when a reason code covers more than one (Mastercard 4853).</li><li>Reports four facts (customer acknowledged receipt, merchant offered a remedy, merchant acknowledged non-delivery, merchant admitted a defect) plus an apology signal for the reviewer.</li><li>Each fact must quote a message; code checks the quote exists and came from the right sender, or drops the fact.</li></ul><p>Skipped when there's nothing to read. Tested on 30 messy hand-written threads: every field right on 29.</p>"],
+  decide: ["Decide", "code · src/agent/decide.py",
+    "<p>The merchant's written policy as plain code: required evidence from the rules table, 13 of 15 evidence checks from record fields, conflicts, merchant fault, P(win), expected value and the 7 ordered rules. It names the rule that fired.</p><p>Given correct inputs it reproduces the answer key on all 162 cases, so V1's decision errors can only come from the reading step. In V0 the model did all of this in its head, and got 24% of decisions wrong.</p>"],
+  writer: ["Letter, brief or note", "Sonnet + code · v1.py",
+    "<ul><li><b>Fight, or an urgent escalation</b> (high value, deadline, repeat disputer): Sonnet writes the letter from a verified fact sheet, with reviewer notes kept out of the issuer letter.</li><li><b>Escalation for conflicts or missing evidence:</b> a code-built brief, no letter.</li><li><b>Accept:</b> a one-line note, no model call.</li></ul><p>Up-front letters pass the calibrated judge 99% of the time.</p>"],
+  queue: ["Review queue", "app/views/review.py",
+    "<p>A person works V1's fight and escalation cases, most urgent deadline first: the brief or letter, evidence on file and missing, guardrail warnings. They approve (editing if needed), accept the loss, or escalate further.</p>"],
+  ondemand: ["Letter on demand", "src/agent/v1.py · draft_letter",
+    "<p>For a brief-only escalation the reviewer decides to contest, the letter is written then, following their direction. If the merchant's own agent admitted the fault, drafting is blocked unless the reviewer overrides. With the guardrail, on-demand letters pass 89.5%.</p>"],
+  store: ["Recorded decisions", "src/review_ui/store.py",
+    "<p>Every review is recorded: what the agent proposed, what the reviewer did, and how much they edited the letter. That turns the override rate and the edit rate into measured numbers, the bar any future auto-submit has to clear.</p>"],
+  submit: ["Submit (gated)", "src/backend/repository.py · submit_response",
+    "<p>The mock processor submission. It refuses without an approval, so nothing reaches the issuer unless a person approved it. Auto-submit for low-risk cases stays off until measured accuracy earns it.</p>"],
+  labels: ["Answer key", "evals/labeling/ → evals/cases/cases.jsonl",
+    "<p>A rule-based labeler computes the right answer for each dispute from the database, the rules table and <code>decision.toml</code>, plus 15 hand-written edge cases. The agent never imports it.</p>"],
+  run: ["Runner + scorer", "evals/run.py · evals/score.py",
+    "<p>Runs any version over all cases (resumable), stores every output with cost and latency, and scores classification, evidence, decisions, wrongful auto-accepts, escalation and letters. Stored results make re-scoring free and versions directly comparable.</p>"],
+  judge: ["Calibrated Opus judge", "evals/judge.py · evals/metrics/judge.py",
+    "<p>Opus 5.5 grades each letter on four criteria and fails it only for material errors (contradictions, invented facts, wrong numbers, concessions). Calibrated against 60 letters the owner graded blind: agreement with settled labels rose from κ 0.42 to 0.73. The rubric is frozen.</p>"],
+  checks: ["Code checks on letters", "evals/metrics/fabrication.py · letter_checks.py",
+    "<p>Deterministic checks the judge can't be trusted with: every ID, amount and date must appear in the records; no concession, note to the reviewer, or internal field name in a letter meant for the issuer.</p>"],
+  reading: ["Reading test", "evals/reading/",
+    "<p>30 hand-written, deliberately messy support threads (typos, sarcasm, reversals, Spanish, apologies vs admissions), labelled blind by the owner. Tests the one step in V1's decisions still done by a model.</p>"],
+  braintrust: ["Braintrust", "evals/braintrust_sync.py",
+    "<p>Each version's results are uploaded as an experiment for case-by-case comparison, and human grading and adjudication happened in Braintrust's review screen.</p>"],
 };
 const nodes = document.querySelectorAll(".node");
 nodes.forEach(n => n.setAttribute("aria-pressed", "false"));
