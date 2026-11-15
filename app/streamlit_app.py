@@ -25,6 +25,11 @@ pages = [
 ]
 st.navigation(pages).run()
 
+REPO = "https://github.com/babupasupathy/DisputeAgent/tree/claude/relaxed-faraday-ubs0ec"
+
 with st.sidebar:
+    st.link_button("Source code on GitHub", REPO, icon=":material/code:", width="stretch")
+    DOCS = REPO.replace("/tree/", "/blob/") + "/docs"
+    st.markdown(f"[How decisions were made]({DOCS}/decisions.md) · [Every measurement]({DOCS}/evals.md)")
     st.caption("A product-management portfolio project. All data is synthetic. "
                "Results shown are stored eval runs; this site makes no model calls.")
