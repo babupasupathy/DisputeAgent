@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: single reading column. Two pipeline strips (today vs proposed) colored by who does the work, then a stage-by-stage table, then costs. */
+/* Layout: single reading column. Two pipeline strips (V0 vs V1) colored by who does the work, then a stage-by-stage table, then measured costs. */
 :root {
   --bg: #f6f7f9; --surface: #ffffff; --ink: #17202b; --muted: #5b6676; --line: #d9dee6; --code-bg: #eef1f5;
   --accent: #1f5fbf;
@@ -105,10 +105,9 @@ footer { font-size: 0.88rem; color: var(--muted); }
   <header>
     <span class="eyebrow">Dispute Agent · who does each job</span>
     <h1>LLM Boundary Map</h1>
-    <p class="lede">Today one Sonnet call does almost everything between fetching the records and the human review. Most of that work is lookups and arithmetic on database fields, which code does exactly, instantly and for free. This page shows each step, who does it now, and who should.</p>
+    <p class="lede">In V0, one Sonnet call did almost everything between fetching the records and the human review. Most of that work is lookups and arithmetic on database fields, which code does exactly, instantly and for free. V1 moved it to code and kept the model only where text has to be read or written. This page shows each step in both versions, and what the change measured.</p>
     <div class="legend" aria-label="Legend">
-      <span><i class="sw llm"></i>Large LLM (Sonnet / Opus)</span>
-      <span><i class="sw small"></i>Small LLM, narrow task (Haiku)</span>
+      <span><i class="sw llm"></i>LLM (Sonnet / Opus)</span>
       <span><i class="sw code"></i>Deterministic code or table lookup</span>
       <span><i class="sw human"></i>Human</span>
     </div>
@@ -119,7 +118,7 @@ footer { font-size: 0.88rem; color: var(--muted); }
     <h2 id="strips">One dispute, start to finish</h2>
 
     <div class="strip-box">
-      <div class="strip-label"><b>Today (V0)</b><span>1 LLM call per case · measured $0.023 · 10.6 s typical</span></div>
+      <div class="strip-label"><b>V0 baseline</b><span>1 LLM call per case · $0.023 · 10.6 s typical</span></div>
       <div class="strip">
         <div class="seg code"><strong>Intake</strong><small>webhook</small></div>
         <div class="seg code"><strong>Fetch records</strong><small>7 lookups</small></div>
@@ -131,94 +130,94 @@ footer { font-size: 0.88rem; color: var(--muted); }
     </div>
 
     <div class="strip-box">
-      <div class="strip-label"><b>Proposed</b><span>LLM only where text has to be read or written</span></div>
+      <div class="strip-label"><b>V1 (built)</b><span>LLM only where text is read or written · $0.012 · 2.4 s typical</span></div>
       <div class="strip">
         <div class="seg code"><strong>Intake</strong><small>webhook</small></div>
         <div class="seg code"><strong>Fetch records</strong><small>7 lookups</small></div>
-        <div class="seg small"><strong>Read the text</strong><small>issuer note, support messages</small></div>
+        <div class="seg llm"><strong>Read the text</strong><small>Sonnet: issuer note, support messages</small></div>
         <div class="seg code"><strong>Classify</strong><small>code + rules table</small></div>
         <div class="seg code"><strong>Check evidence</strong><small>13 of 15 items are fields</small></div>
         <div class="seg code"><strong>Decide</strong><small>P(win), EV, 7 rules</small></div>
-        <div class="seg llm"><strong>Write letter</strong><small>fight / escalate only</small></div>
-        <div class="seg code"><strong>Check letter</strong><small>no invented facts</small></div>
-        <div class="seg human"><strong>Human review</strong><small>approve / edit</small></div>
+        <div class="seg llm"><strong>Write letter</strong><small>fight / urgent escalations</small></div>
+        <div class="seg code"><strong>Check letter</strong><small>invented facts, concessions, field names</small></div>
+        <div class="seg human"><strong>Human review</strong><small>review queue</small></div>
         <div class="seg code"><strong>Submit</strong><small>gated</small></div>
       </div>
     </div>
-    <p class="hint">In the proposed flow the small model's output is a short list of yes/no facts, each with the quote it came from. Everything after that is code until the letter.</p>
+    <p class="hint">In V1 the reader's output is a short list of yes/no facts, each with the exact quote it came from, and code checks every quote. Everything after that is code until the letter. The model is not called at all for 16 of the 162 cases.</p>
   </section>
 
   <section aria-labelledby="stages">
     <span class="eyebrow">Stage by stage</span>
-    <h2 id="stages">What can move off the LLM</h2>
+    <h2 id="stages">What moved off the LLM</h2>
     <div class="tablebox"><table>
-      <thead><tr><th>Stage</th><th>Today</th><th>Proposed</th><th>Why</th></tr></thead>
+      <thead><tr><th>Stage</th><th>V0</th><th>V1</th><th>What happened</th></tr></thead>
       <tbody>
         <tr class="group"><td colspan="4">Agent</td></tr>
         <tr><td class="stage">Intake and fetch records</td><td><span class="chip code">code</span></td><td><span class="chip code">code</span></td>
-          <td class="why">Keep as code. V1 planned to let the model choose which lookups to call. The seven lookups are fast, free and small, so fetching all of them every time is cheaper and can't miss one.<small>Keep model-chosen tool calls as an experiment to measure, not the default.</small></td></tr>
-        <tr><td class="stage">Classify network and reason code</td><td><span class="chip llm">Sonnet</span></td><td><div class="chips"><span class="chip code">lookup</span><span class="chip small">Haiku</span></div></td>
-          <td class="why">The network and reason code arrive in the webhook; the rules table maps them to a category. A model is needed only for the ambiguous cases: Mastercard 4853 covers both “not received” and “not as described”, and some webhooks say only “general”. Then a small model reads the issuer's note.<small>V0 got 100% here, so this is about cost, not accuracy.</small></td></tr>
+          <td class="why">Unchanged: all seven lookups every time. They are fast, free and small, so fetching everything is cheaper than letting the model choose and can't miss a record.<small>Model-chosen tools stays an optional experiment.</small></td></tr>
+        <tr><td class="stage">Classify network and reason code</td><td><span class="chip llm">Sonnet</span></td><td><div class="chips"><span class="chip code">lookup</span><span class="chip llm">Sonnet</span></div></td>
+          <td class="why">The rules table maps network and code to a category. The reader picks only when a code covers two kinds of dispute (Mastercard 4853) or the webhook says "general".<small>100% in both versions; 30/30 on the messy-thread reading test.</small></td></tr>
         <tr><td class="stage">Which evidence is required</td><td><span class="chip llm">Sonnet (guessed)</span></td><td><span class="chip code">rules table</span></td>
-          <td class="why">This is a lookup by network and reason code. V0 had to guess it and listed the exactly right items in only 2% of cases. This was V0's biggest single failure, and it caused 20 winnable cases to be escalated.</td></tr>
+          <td class="why">V0 listed the exactly right items in 2% of cases and escalated 20 winnable disputes. V1: 100%, and 0 winnable cases escalated.</td></tr>
         <tr><td class="stage">Is each item present? (13 items)</td><td><span class="chip llm">Sonnet</span></td><td><span class="chip code">code</span></td>
-          <td class="why">13 of the 15 evidence types are database fields: tracking number exists, delivered scan, address match flag, signature or photo flag, AVS/CVV result, account age, prior orders, device and IP match, listing snapshot, policy accepted, returns, dispatch photo.<small>Each already has a “derived from” column in <code>evidence_definitions.csv</code>.</small></td></tr>
-        <tr><td class="stage">Is each item present? (2 items)</td><td><span class="chip llm">Sonnet</span></td><td><span class="chip small">Haiku</span></td>
-          <td class="why">“Customer acknowledged receipt” and “merchant offered a remedy” live in support message text. This is real reading, and a good narrow job for a small model: answer yes/no and quote the message.</td></tr>
-        <tr><td class="stage">Conflicts and merchant fault</td><td><span class="chip llm">Sonnet</span></td><td><div class="chips"><span class="chip code">code</span><span class="chip small">Haiku</span></div></td>
-          <td class="why">The structured checks are code: refund amount doesn't match, carrier lost or returned the parcel, return received but never refunded. The model only flags messages that contradict the tracking (“never arrived” after a signed delivery).<small>13 of the 14 wrongful auto-accepts were cases with conflicting records. This split targets them directly.</small></td></tr>
+          <td class="why">Database fields: tracking, delivered scan, address match, signature or photo, AVS/CVV, account age at order time, prior orders, device and IP, listing, policy, returns, dispatch photo.</td></tr>
+        <tr><td class="stage">Is each item present? (2 items)</td><td><span class="chip llm">Sonnet</span></td><td><span class="chip llm">Sonnet</span></td>
+          <td class="why">"Customer acknowledged receipt" and "merchant offered a remedy" live in message text. The reader must quote the message; code checks the quote.<small>Haiku was tested here: it matched Sonnet on every decision-driving fact at 1/18 of the cost but missed more implied receipts. Sonnet stays: one lost dispute ($200–500) outweighs ~$0.002 saved per dispute.</small></td></tr>
+        <tr><td class="stage">Conflicts and merchant fault</td><td><span class="chip llm">Sonnet</span></td><td><div class="chips"><span class="chip code">code</span><span class="chip llm">Sonnet</span></div></td>
+          <td class="why">Structured checks are code (refund mismatch, lost or returned parcel, return received but not refunded). The reader flags admissions in messages; an apology alone is only a signal for the reviewer.<small>All 13 of V0's conflict cases accepted without review are now escalated.</small></td></tr>
         <tr><td class="stage">P(win)</td><td><span class="chip llm">Sonnet (guessed)</span></td><td><span class="chip code">formula</span></td>
-          <td class="why">The formula is already in <code>decision.toml</code>. Later, replace it with a simple statistical model fit on human-reviewed outcomes. Either way, no LLM.</td></tr>
+          <td class="why">The formula in <code>decision.toml</code>. V2 would fit it on reviewed outcomes; still no LLM.</td></tr>
         <tr><td class="stage">Expected value and the 7 rules</td><td><span class="chip llm">Sonnet</span></td><td><span class="chip code">code</span></td>
-          <td class="why">Multiplication, comparisons and an ordered list of if-statements. Code gets it right every time and can explain exactly which rule fired. Accepted cases then need no LLM call at all.</td></tr>
-        <tr><td class="stage">Representment letter</td><td><span class="chip llm">Sonnet</span></td><td><div class="chips"><span class="chip llm">Sonnet</span><span class="chip code">template</span></div></td>
-          <td class="why">This is the real LLM job: a persuasive, point-by-point letter. Feed it only the verified fact sheet, so it can't cite anything else. Accept cases get a one-line template.<small>Output tokens are about 75% of today's cost per case. Writing letters only for fight and escalate cases cuts that directly.</small></td></tr>
-        <tr><td class="stage">Escalation summary for the reviewer</td><td><span class="chip llm">Sonnet</span></td><td><span class="chip code">template</span></td>
-          <td class="why">The reviewer needs: which rule fired, what's missing, the amount and the deadline. All of these are known facts, so a template fills them in.</td></tr>
-        <tr><td class="stage">Check letter for invented facts</td><td><span class="chip code">code</span></td><td><span class="chip code">code</span></td>
-          <td class="why">Already code. It checks every ID, amount and date against the records.</td></tr>
-        <tr><td class="stage">Review and submit</td><td><span class="chip human">human</span></td><td><span class="chip human">human</span></td>
-          <td class="why">Stays human until measured accuracy earns auto-submit for low-risk cases.</td></tr>
+          <td class="why">Code names the rule that fired. Decisions: 76% → 100%; wrongful auto-accepts 14 → 0.</td></tr>
+        <tr><td class="stage">Representment letter</td><td><span class="chip llm">Sonnet</span></td><td><div class="chips"><span class="chip llm">Sonnet</span><span class="chip code">brief</span></div></td>
+          <td class="why">Written from a verified fact sheet for fight and urgent escalations: 99% pass the calibrated judge. Conflict or missing-evidence escalations get a brief; a letter is drafted only if a reviewer contests.</td></tr>
+        <tr><td class="stage">Escalation summary for the reviewer</td><td><span class="chip llm">Sonnet</span></td><td><span class="chip code">code</span></td>
+          <td class="why">The brief is built in code: which rule fired, what's missing, conflicts with the quoted message, amount, deadline, expected value, guardrail warnings.</td></tr>
+        <tr><td class="stage">Check letter</td><td><span class="chip code">code</span></td><td><span class="chip code">code</span></td>
+          <td class="why">Invented IDs, amounts and dates (V0: 7 letters flagged; V1: 0), plus concessions, notes to the reviewer and internal field names in letters (V1: 0).</td></tr>
+        <tr><td class="stage">Review and submit</td><td><span class="chip human">human (not built)</span></td><td><span class="chip human">human</span></td>
+          <td class="why">The review queue: approve or edit, accept the loss, escalate, or draft on demand; every decision is recorded.</td></tr>
         <tr class="group"><td colspan="4">Eval harness</td></tr>
         <tr><td class="stage">Labels and scoring</td><td><span class="chip code">code</span></td><td><span class="chip code">code</span></td>
-          <td class="why">Already code.</td></tr>
-        <tr><td class="stage">Draft-quality judge</td><td><span class="chip llm">Opus</span></td><td><div class="chips"><span class="chip llm">Opus, batched</span></div></td>
-          <td class="why">The judge cost $3.93 for the V0 run, more than the agent's $3.79. Send it through the Batch API (half price), judge only letters that changed between versions, and try a Sonnet judge once the human calibration shows how well each one agrees with you.</td></tr>
+          <td class="why">Unchanged.</td></tr>
+        <tr><td class="stage">Draft-quality judge</td><td><span class="chip llm">Opus</span></td><td><span class="chip llm">Opus</span></td>
+          <td class="why">Calibrated against 60 letters graded blind by the owner (κ 0.73 vs settled labels). It still costs more than the agent: $2.63 to judge V1's 76 letters vs $1.88 to run V1 on all 162 cases.<small>Not done yet: Batch API (half price), skipping unchanged letters, and testing Sonnet as judge against the 60 graded letters.</small></td></tr>
       </tbody></table></div>
   </section>
 
   <section aria-labelledby="cost">
-    <span class="eyebrow">What it would save</span>
-    <h2 id="cost">Cost per case</h2>
+    <span class="eyebrow">What it saved</span>
+    <h2 id="cost">Cost and speed per case</h2>
     <div class="cards">
       <div class="card"><span class="tag measured">Measured · V0</span><div class="big">$0.023</div>
-        <p>Average of 162 cases on Sonnet 5.5: about 5,900 input tokens (57% from cache) and 1,750 output tokens. Output is about $0.017 of the total.</p></div>
-      <div class="card"><span class="tag estimate">Estimate · proposed</span><div class="big">≈ $0.01</div>
-        <p>A Haiku reading call costs well under a tenth of a cent. A Sonnet letter for the roughly 78% of cases that are fight or escalate is about a cent. Accept cases cost almost nothing. Measure before relying on it.</p></div>
-      <div class="card"><span class="tag estimate">Estimate · speed</span><div class="big">0 s</div>
-        <p>LLM time for an accepted case, down from 10.6 s typical today. Fight and escalate cases still wait for the letter, and can be written in the background while the reviewer reads the summary.</p></div>
+        <p>One Sonnet call per dispute: about 5,900 input and 1,750 output tokens. 10.6 s typical.</p></div>
+      <div class="card"><span class="tag measured">Measured · V1</span><div class="big">$0.012</div>
+        <p>Half of V0. A reading call when there is text to read, a letter only for fight and urgent escalations, nothing for accepts.</p></div>
+      <div class="card"><span class="tag measured">Measured · V1 speed</span><div class="big">2.4 s</div>
+        <p>Typical, down from 10.6 s. Accepts and briefs return almost instantly; cases with a letter take about 10–12 s.</p></div>
     </div>
-    <p class="hint">At roughly 2 cents a case, model cost is small next to the $35 it costs to fight a dispute. The stronger reasons to move work to code are accuracy and being able to explain every decision.</p>
+    <p class="hint">At about a cent a case, model cost is small next to the $35 it costs to fight a dispute. The bigger wins were accuracy and being able to name the rule behind every decision.</p>
   </section>
 
   <section aria-labelledby="catch">
     <div class="callout">
-      <h3 id="catch">A catch to plan for: the eval would grade the code against itself</h3>
-      <p>The correct answers are produced by the same rules (<code>decision.toml</code> and the rules table) that the proposed decision code would run. Moved to code, the decision layer would score 100% by construction, and that score proves nothing about real disputes.</p>
-      <p>The meaningful test moves to what the model still does: reading text. That needs labels written by a person for the text-based items (customer acknowledged receipt, remedy offered, messages that contradict tracking, which way Mastercard 4853 goes), and test messages written to be messy rather than generated from templates. Hand-labelling those is the most useful work for a PM in this design.</p>
+      <h3 id="catch">The catch, and how it was handled: the eval grades the code against itself</h3>
+      <p>The answer key and V1's decision code implement the same written policy, so with correct inputs V1 scores 100% on decisions by construction. That number alone proves little.</p>
+      <p>So the meaningful tests moved to what the model still does. <b>Reading:</b> 30 deliberately messy, hand-written support threads labelled blind by the owner; after three owner rulings on what counts as implied, every field right on 29 of 30. <b>Letters:</b> 20 fresh V1 letters graded blind, which also exposed a synthetic-data bug the 162-case score could never have shown.</p>
     </div>
   </section>
 
   <section aria-labelledby="order">
-    <span class="eyebrow">Suggested order</span>
-    <h2 id="order">How to roll it out and measure it</h2>
+    <span class="eyebrow">How it went</span>
+    <h2 id="order">The rollout, step by step</h2>
     <ol class="ranked">
-      <li><h3>Decision layer to code</h3><p>Rules table, field checks, P(win), EV and the 7 rules. The model still reads text and writes the letter. This should remove most of V0's 20 wrongly escalated and 13 wrongly accepted cases. Compare on the same 162 cases.</p></li>
-      <li><h3>Letters only for fight and escalate</h3><p>Accepted cases get a template. Smaller bill, and the judge has fewer letters to grade.</p></li>
-      <li><h3>Haiku for reading text</h3><p>Run it next to Sonnet on the text-based items and keep it only if accuracy holds on your hand-written labels.</p></li>
-      <li><h3>Cheaper judging</h3><p>Batch API and judging only changed letters right away. Switch the judge model only after the 40-letter calibration.</p></li>
+      <li><h3>Decision layer to code: done</h3><p>Rules table, field checks, P(win), EV and the 7 rules. Decisions 76% → 100%; winnable cases escalated 20 → 0; wrongful auto-accepts 14 → 0.</p></li>
+      <li><h3>Letters only where needed: done</h3><p>Accepts get a one-line note. Conflict and missing-evidence escalations get a brief, with a letter on demand guarded against the merchant's own admissions. Cost per case −50%.</p></li>
+      <li><h3>A smaller model for reading: tested, not adopted</h3><p>Haiku matched Sonnet on every decision-driving fact but missed more implied receipts. Decided on ROI: Sonnet stays.</p></li>
+      <li><h3>Cheaper judging: still to do</h3><p>Batch API and skipping unchanged letters are free wins. A Sonnet judge only if it matches Opus on the 60 human-graded letters.</p></li>
     </ol>
   </section>
 
-  <footer>Measured figures come from <code>evals/results/v0</code> (162 cases, 9 November 2026). Estimates use Anthropic list prices: Haiku 5.5 $0.10 / $0.50, Sonnet 5.5 $2 / $10, Opus 5.5 $4 / $20 per million input / output tokens; Batch API is half price. All data is synthetic.</footer>
+  <footer>Measured figures come from <code>evals/results/v0</code> and <code>evals/results/v1</code> (162 synthetic cases each). Prices: Sonnet 5.5 $2 / $10, Opus 5.5 $4 / $20, Haiku 5.5 $0.10 / $0.50 per million input / output tokens; Batch API is half price. All data is synthetic.</footer>
 </div>
